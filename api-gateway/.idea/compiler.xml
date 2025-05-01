@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="contest.infrastructure" />
+        <module name="contest.domain" />
+        <module name="survey.adapter" />
+        <module name="survey.domain" />
+        <module name="quiz.domain" />
+        <module name="contest.application" />
+        <module name="eureka-server" />
+        <module name="quiz.infrastructure" />
+        <module name="auth-service" />
+        <module name="quiz.application" />
+        <module name="survey.infrastructure" />
+        <module name="api-gateway" />
+        <module name="contest.adapter" />
+        <module name="quiz.adapter" />
+        <module name="survey.application" />
+      </profile>
+    </annotationProcessing>
+  </component>
+</project>
