@@ -1,5 +1,7 @@
-package com.cmze.response;
+package com.cmze.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateSurveyResponse {
-    private Long id;
+@Entity
+@Table(name = "user")
+public class User {
 }

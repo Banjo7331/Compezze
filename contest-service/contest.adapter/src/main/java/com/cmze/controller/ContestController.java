@@ -10,13 +10,14 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("contest")
 public class ContestController {
+
     @PostMapping()
     public ResponseEntity<CreateContestResponse> createContest(){
 
     }
 
     @PostMapping("/{id}/participate")
-    public FileResponse joinContest(MultipartFile file, String bucketName) {
+    public ResponseEntity<JoinContestResponse> joinContest(MultipartFile file, String bucketName) {
 
         String fileType = FileTypeUtils.getFileType(file);
 

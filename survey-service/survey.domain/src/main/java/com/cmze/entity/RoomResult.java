@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -14,20 +13,24 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "survey-attempt")
-public class SurveyAttempt {
+@Table(name = "room_results")
+public class RoomResult {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String name;
+    private String room;
 
-    @OneToMany(mappedBy = "filledSurvey", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ParticipantAnswer> participantAnswers;
+    @OneToMany(mappedBy = "surveyRoomResult", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<SurveyAttempt> questionRoomResult;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "survey_id", nullable = false)
+    @JoinColumn(name = "surveyId")
     private SurveyForm survey;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "userId")
+    private User user;
 }

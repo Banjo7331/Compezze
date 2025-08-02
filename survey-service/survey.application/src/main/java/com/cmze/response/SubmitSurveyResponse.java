@@ -9,6 +9,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateSurveyResponse {
+public class SubmitSurveyResponse {
     private Long id;
 }
