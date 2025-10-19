@@ -1,7 +1,8 @@
 package com.cmze.entity;
 
 import com.cmze.enums.ContestCategory;
-import com.cmze.enums.VotingType;
+import com.cmze.enums.ContestStatus;
+import com.cmze.enums.SocialPlatform;
 import jakarta.persistence.*;
 
 import jakarta.validation.constraints.*;
@@ -9,8 +10,7 @@ import lombok.*;
 import org.antlr.v4.runtime.misc.NotNull;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -50,30 +50,56 @@ public class Contest {
     @Future(message = "End date must be in the future")
     private LocalDateTime endDate;
 
-    @NotNull()
     private boolean isPrivate = false;
-    @NotNull()
-    private boolean publishToSocialMedia = false;
-    @NotNull()
-    private boolean hasPreliminaryStage = false;
 
-    @NotNull()
-    @Enumerated(EnumType.STRING)
-    private VotingType votingType;
+    private boolean hasPreliminaryStage = false;
 
     @NotNull()
     private boolean isOpen = true;
 
-    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Submission> submissions;
-
     private boolean contentVerified = false;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "organizer_id", nullable = false)
-    private User user;
+    @NotNull()
+    private String organizerId;
 
-    @ManyToOne
-    private User organizer;
+    @NotNull()
+    @Enumerated(EnumType.STRING)
+    private ContestStatus status;
+
+    @Embedded
+    private CoverImageRef coverImage;
+
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "contest_publish_targets",
+            joinColumns = @JoinColumn(name = "contest_id"))
+    @Column(name = "platform", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Set<SocialPlatform> publishTargets = new HashSet<>();
+
+    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Submission> submissions = new ArrayList<>();
+
+    @OneToMany(mappedBy = "contest", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position ASC")
+    private List<Stage> stages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "contest", fetch = FetchType.LAZY)
+    private List<Participant> participants = new ArrayList<>();
+
+    @Embeddable
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor
+    public static class CoverImageRef {
+        @Column(name = "cover_image_id")
+        private String externalId;
+
+        @Column(name = "cover_image_url")
+        private String url;
+
+        @Column(name = "cover_image_content_type")
+        private String contentType;
+
+        @Column(name = "cover_image_size")
+        private Long size;
+    }
 }
 
