@@ -41,8 +41,6 @@ public class ContestController {
         return result.toResponseEntity(HttpStatus.CREATED);
     }
 
-
-
     @PostMapping("/{id}/start")
     public ResponseEntity<?> start(@PathVariable String id,
                                    @RequestHeader("X-User-Id") String userId) {

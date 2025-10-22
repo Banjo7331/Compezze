@@ -4,7 +4,7 @@ public enum ContestCategory {
     Art,
     Music,
     Food,
-    Other,
     Sport,
     Science,
+    Other,
 }

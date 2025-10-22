@@ -17,5 +17,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
         @JsonSubTypes.Type(value = PublicVotingSettingsRequest.class, name = "PUBLIC_VOTING"),
         @JsonSubTypes.Type(value = JuryVotingSettingsRequest.class,   name = "JURY_VOTING"),
+        @JsonSubTypes.Type(value = SurveySettingsRequest.class,   name = "SURVEY"),
+        @JsonSubTypes.Type(value = QuizSettingsRequest.class,         name = "QUIZ")
 })
 public interface StageSettingsRequest {}
