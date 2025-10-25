@@ -2,29 +2,33 @@ package com.cmze.spi.minio;
 
 import com.cmze.shared.MediaRef;
 import io.minio.GetObjectResponse;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
-import java.util.List;
-import java.util.Map;
 
 public interface MinioService {
-    public MediaRef upload(String objectKey, InputStream in, long size, String contentType);
 
-    MediaRef replace(String objectKey, InputStream in, long size, String contentType);
+    /** Upload przez backend (zapis do MinIO). Rzuca, jeśli obiekt istnieje. */
+    MediaRef upload(String bucket, String objectKey, InputStream in, long size, String contentType);
 
-    GetObjectResponse get(String objectKey);
+    /** Nadpisanie/replace przez backend (bez sprawdzania istnienia). */
+    MediaRef replace(String bucket, String objectKey, InputStream in, long size, String contentType);
 
-    void delete(String objectKey);
+    /** Pobranie obiektu strumieniem (zwykle niepotrzebne przy presigned GET, ale dostępne). */
+    GetObjectResponse get(String bucket, String objectKey);
 
-    boolean exists(String objectKey);
+    /** Usunięcie obiektu. */
+    void delete(String bucket, String objectKey);
 
-    URL presignGet(String objectKey, Duration expiry);
+    /** Sprawdzenie istnienia obiektu. */
+    boolean exists(String bucket, String objectKey);
 
-    URL presignPut(String objectKey, Duration expiry);
+    /** Podpisany URL do odczytu (np. do <img>/<video>), krótkotrwały. */
+    URL presignGet(String bucket, String objectKey, Duration expiry);
 
+    /** (Opcjonalnie) Podpisany URL do uploadu bezpośrednio z frontu. */
+    URL presignPut(String bucket, String objectKey, Duration expiry);
 }
 
 

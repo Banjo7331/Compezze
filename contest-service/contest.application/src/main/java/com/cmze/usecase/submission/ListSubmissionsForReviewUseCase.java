@@ -5,6 +5,7 @@ import com.cmze.enums.SubmissionStatus;
 import com.cmze.repository.SubmissionRepository;
 import com.cmze.response.GetSubmissionResponse;
 import com.cmze.shared.ActionResult;
+import com.cmze.spi.minio.MinioService;
 import com.cmze.usecase.UseCase;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
@@ -17,10 +18,12 @@ public class ListSubmissionsForReviewUseCase {
 
     private final ModelMapper modelMapper;
     private final SubmissionRepository submissionRepo;
+    private final MinioService minioService;
 
-    public ListSubmissionsForReviewUseCase(ModelMapper modelMapper,SubmissionRepository submissionRepo) {
+    public ListSubmissionsForReviewUseCase(ModelMapper modelMapper,SubmissionRepository submissionRepo, MinioService minioService) {
         this.modelMapper = modelMapper;
         this.submissionRepo = submissionRepo;
+        this.minioService = minioService;
     }
 
     @Transactional

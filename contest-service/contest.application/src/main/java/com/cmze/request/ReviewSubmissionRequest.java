@@ -13,8 +13,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReviewSubmissionRequest {
-    @NotBlank
-    private String submissionId;
     @NotNull
     private SubmissionStatus status;
     private String comment;

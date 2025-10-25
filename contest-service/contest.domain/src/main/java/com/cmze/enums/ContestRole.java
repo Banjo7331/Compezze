@@ -5,6 +5,5 @@ public enum ContestRole {
     Moderator,
     Competitor,
     Jury,
-    Viewer,
     Vip
 }

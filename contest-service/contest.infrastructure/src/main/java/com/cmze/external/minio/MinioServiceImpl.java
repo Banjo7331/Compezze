@@ -1,136 +1,133 @@
 package com.cmze.external.minio;
 
 import com.cmze.shared.MediaRef;
-import com.cmze.spi.minio.MediaProperties;
-import com.cmze.spi.minio.MinioProperties;
 import com.cmze.spi.minio.MinioService;
 import io.minio.*;
+import io.minio.errors.ErrorResponseException;
 import io.minio.http.Method;
-import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.ErrorResponseException;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 
 @Service
 public class MinioServiceImpl implements MinioService {
 
-
-
     private final MinioClient client;
-    private final com.cmze.spi.minio.MinioProperties minioProps;
-    private final MediaProperties mediaProps;
 
-    public MinioServiceImpl(MinioClient client, MinioProperties minioProps, MediaProperties mediaProps) {
+    // TTL-e z application.properties (bez klas @ConfigurationProperties)
+    @Value("${app.media.presigned-get-ttl:10m}")
+    private Duration presignedGetTtl;
+
+    @Value("${app.media.presigned-put-ttl:2m}")
+    private Duration presignedPutTtl;
+
+    public MinioServiceImpl(MinioClient client) {
         this.client = client;
-        this.minioProps = minioProps;
-        this.mediaProps = mediaProps;
     }
 
-    @PostConstruct
-    void ensureBucket() {
+    // ========= API =========
+
+    @Override
+    public MediaRef upload(String bucket, String objectKey, InputStream in, long size, String contentType) {
+        ensureBucketExists(bucket);
+        // jeśli klucze są unikalne, możesz pominąć exists()
+        if (exists(bucket, objectKey)) {
+            throw new IllegalStateException("Obiekt już istnieje: " + objectKey);
+        }
+        ObjectWriteResponse resp = putObject(bucket, objectKey, in, size, contentType, Map.of());
+        return new MediaRef(bucket, objectKey, contentType, size, resp.etag(), resp.versionId());
+    }
+
+    @Override
+    public MediaRef replace(String bucket, String objectKey, InputStream in, long size, String contentType) {
+        ensureBucketExists(bucket);
+        ObjectWriteResponse resp = putObject(bucket, objectKey, in, size, contentType, Map.of());
+        return new MediaRef(bucket, objectKey, contentType, size, resp.etag(), resp.versionId());
+    }
+
+    @Override
+    public GetObjectResponse get(String bucket, String objectKey) {
         try {
-            boolean exists = client.bucketExists(
-                    BucketExistsArgs.builder().bucket(minioProps.getDefaultBucket()).build()
+            return client.getObject(
+                    GetObjectArgs.builder().bucket(bucket).object(objectKey).build()
             );
-            if (!exists) {
-                client.makeBucket(MakeBucketArgs.builder().bucket(minioProps.getDefaultBucket()).build());
-            }
         } catch (Exception e) {
-            throw new RuntimeException("Nie udało się utworzyć/sprawdzić bucketu: " + minioProps.getDefaultBucket(), e);
+            throw new RuntimeException("Pobranie nieudane: " + bucket + "/" + objectKey, e);
         }
     }
 
-    public MediaRef upload(String objectKey, InputStream in, long size, String contentType) {
-        validate(contentType, size);
-        if (exists(objectKey)) throw new IllegalStateException("Obiekt już istnieje: " + objectKey);
-        ObjectWriteResponse resp = putObject(objectKey, in, size, contentType, Map.of(
-                "x-amz-meta-kind", mediaKind(contentType)
-        ));
-        return new MediaRef(minioProps.getDefaultBucket(), objectKey, contentType, size, resp.etag(), resp.versionId());
-    }
-
-    public MediaRef replace(String objectKey, InputStream in, long size, String contentType) {
-        validate(contentType, size);
-        ObjectWriteResponse resp = putObject(objectKey, in, size, contentType, Map.of(
-                "x-amz-meta-kind", mediaKind(contentType)
-        ));
-        return new MediaRef(minioProps.getDefaultBucket(), objectKey, contentType, size, resp.etag(), resp.versionId());
-    }
-
-    public GetObjectResponse get(String objectKey) {
+    @Override
+    public void delete(String bucket, String objectKey) {
         try {
-            return client.getObject(GetObjectArgs.builder()
-                    .bucket(minioProps.getDefaultBucket())
-                    .object(objectKey)
-                    .build());
+            client.removeObject(RemoveObjectArgs.builder().bucket(bucket).object(objectKey).build());
         } catch (Exception e) {
-            throw new RuntimeException("Pobranie nieudane: " + objectKey, e);
+            throw new RuntimeException("Usunięcie nieudane: " + bucket + "/" + objectKey, e);
         }
     }
 
-    public void delete(String objectKey) {
+    @Override
+    public boolean exists(String bucket, String objectKey) {
         try {
-            client.removeObject(RemoveObjectArgs.builder()
-                    .bucket(minioProps.getDefaultBucket())
-                    .object(objectKey)
-                    .build());
-        } catch (Exception e) {
-            throw new RuntimeException("Usunięcie nieudane: " + objectKey, e);
-        }
-    }
-
-    public boolean exists(String objectKey) {
-        try {
-            client.statObject(StatObjectArgs.builder()
-                    .bucket(minioProps.getDefaultBucket())
-                    .object(objectKey)
-                    .build());
+            client.statObject(StatObjectArgs.builder().bucket(bucket).object(objectKey).build());
             return true;
+        } catch (io.minio.errors.ErrorResponseException e) {
+            // brak obiektu → false, inne błędy → rzuć dalej
+            String code = e.errorResponse().code();
+            if ("NoSuchKey".equals(code) || "NotFound".equalsIgnoreCase(code)) return false;
+            throw new RuntimeException("exists() failed for " + bucket + "/" + objectKey + ": " + code, e);
         } catch (Exception e) {
-            return false;
+            throw new RuntimeException("exists() failed for " + bucket + "/" + objectKey, e);
         }
     }
 
-    public URL presignGet(String objectKey, Duration expiry) {
-        int seconds = (int) (expiry != null ? expiry.toSeconds() : minioProps.getPresignExpirySeconds());
+    @Override
+    public URL presignGet(String bucket, String objectKey, Duration expiry) {
+        int seconds = toSecondsBounded(expiry != null ? expiry : presignedGetTtl);
         try {
             String url = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                     .method(Method.GET)
-                    .bucket(minioProps.getDefaultBucket())
+                    .bucket(bucket)
                     .object(objectKey)
                     .expiry(seconds)
                     .build());
             return new URL(url);
         } catch (Exception e) {
-            throw new RuntimeException("Presign GET nieudany dla: " + objectKey, e);
+            throw new RuntimeException("Presign GET nieudany dla: " + bucket + "/" + objectKey, e);
         }
     }
 
-    public URL presignPut(String objectKey, Duration expiry) {
-        int seconds = (int) (expiry != null ? expiry.toSeconds() : minioProps.getPresignExpirySeconds());
+    // masz w interfejsie – zostawiam, choć nieużywane przy uploadzie przez backend
+    @Override
+    public URL presignPut(String bucket, String objectKey, Duration expiry) {
+        int seconds = toSecondsBounded(expiry != null ? expiry : presignedPutTtl);
         try {
             String url = client.getPresignedObjectUrl(GetPresignedObjectUrlArgs.builder()
                     .method(Method.PUT)
-                    .bucket(minioProps.getDefaultBucket())
+                    .bucket(bucket)
                     .object(objectKey)
                     .expiry(seconds)
                     .build());
             return new URL(url);
         } catch (Exception e) {
-            throw new RuntimeException("Presign PUT nieudany dla: " + objectKey, e);
+            throw new RuntimeException("Presign PUT nieudany dla: " + bucket + "/" + objectKey, e);
         }
     }
 
-    private ObjectWriteResponse putObject(String objectKey, InputStream in, long size, String contentType,
-                                          Map<String,String> headers) {
+    // ========= helpers =========
+
+    private ObjectWriteResponse putObject(String bucket,
+                                          String objectKey,
+                                          InputStream in,
+                                          long size,
+                                          String contentType,
+                                          Map<String, String> headers) {
         try {
             PutObjectArgs.Builder b = PutObjectArgs.builder()
-                    .bucket(minioProps.getDefaultBucket())
+                    .bucket(bucket)
                     .object(objectKey)
                     .stream(in, size, -1)
                     .contentType(contentType);
@@ -139,31 +136,27 @@ public class MinioServiceImpl implements MinioService {
         } catch (ErrorResponseException e) {
             throw new RuntimeException("MinIO error: " + e.errorResponse().message(), e);
         } catch (Exception e) {
-            throw new RuntimeException("Zapis nieudany dla: " + objectKey, e);
+            throw new RuntimeException("Zapis nieudany dla: " + bucket + "/" + objectKey, e);
         }
     }
 
-    private void validate(String contentType, long size) {
-        String kind = mediaKind(contentType);
-        if ("image".equals(kind)) {
-            require(mediaProps.getAllowedImageTypes(), contentType, "Niedozwolony typ obrazka");
-            if (size > mediaProps.getMaxImageBytes()) throw new IllegalArgumentException("Za duży obrazek: " + size);
-        } else if ("video".equals(kind)) {
-            require(mediaProps.getAllowedImageTypes(), contentType, "Niedozwolony typ wideo");
-            if (size > mediaProps.getMaxVideoBytes()) throw new IllegalArgumentException("Za duże wideo: " + size);
-        } else {
-            throw new IllegalArgumentException("Nieobsługiwany contentType: " + contentType);
+    private void ensureBucketExists(String bucket) {
+        try {
+            boolean exists = client.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
+            if (!exists) {
+                client.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Nie udało się utworzyć/sprawdzić bucketu: " + bucket, e);
         }
     }
 
-    private static void require(List<String> allowed, String value, String msg) {
-        if (value == null || !allowed.contains(value)) throw new IllegalArgumentException(msg + ": " + value);
-    }
-
-    private String mediaKind(String contentType) {
-        if (contentType == null) return "unknown";
-        if (contentType.startsWith("image/")) return "image";
-        if (contentType.startsWith("video/")) return "video";
-        return "unknown";
+    private static int toSecondsBounded(Duration d) {
+        long s = (d != null ? d.getSeconds() : 600);
+        if (s < 1) s = 1;
+        // AWS S3 ma limit 7 dni; MinIO akceptuje podobnie – trzymajmy się tego
+        long max = 7L * 24 * 3600;
+        if (s > max) s = max;
+        return (int) s;
     }
 }

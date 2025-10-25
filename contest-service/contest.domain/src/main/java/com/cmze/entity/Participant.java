@@ -30,8 +30,8 @@ import java.util.Set;
 public class Participant {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "contest_id", nullable = false)
@@ -51,16 +51,8 @@ public class Participant {
     @Column(name = "bio")
     private String bio;
 
-    @Embeddable
-    @Getter @Setter @NoArgsConstructor @AllArgsConstructor
-    public static class AvatarRef {
-        @Column(name = "avatar_object_key", length = 300)  private String objectKey;
-        @Column(name = "avatar_url", length = 500)         private String url;
-        @Column(name = "avatar_content_type", length = 100)private String contentType;
-        @Column(name = "avatar_size")                      private Long size;
-    }
-    @Embedded
-    private AvatarRef avatar;
+    @Column(name = "avatar_key", length = 120)
+    private String avatarKey;
 
     @ElementCollection(fetch = FetchType.EAGER, targetClass = ContestRole.class)
     @CollectionTable(name = "participant_roles", joinColumns = @JoinColumn(name = "participant_id"))

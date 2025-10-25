@@ -1,19 +1,28 @@
 package com.cmze.usecase.participant;
 
 import com.cmze.entity.Contest;
+import com.cmze.entity.Participant;
 import com.cmze.entity.Submission;
+import com.cmze.enums.ContestRole;
+import com.cmze.enums.SubmissionMediaPolicy;
 import com.cmze.repository.ContestRepository;
+import com.cmze.repository.ParticipantRepository;
 import com.cmze.repository.SubmissionRepository;
 import com.cmze.response.SubmitEntryResponse;
 import com.cmze.shared.ActionResult;
+import com.cmze.shared.MediaRef;
+import com.cmze.spi.minio.MediaLocation;
 import com.cmze.spi.minio.MinioService;
+import com.cmze.spi.minio.ObjectKeyFactory;
 import com.cmze.usecase.UseCase;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,55 +33,55 @@ public class SubmitEntryForContestUseCase {
     private final MinioService minioService;
     private final ContestRepository contestRepository;
     private final SubmissionRepository submissionRepository;
+    private final ParticipantRepository participantRepository;
+    private final ObjectKeyFactory objectKeyFactory;
 
-    @Value("${app.media.bucket:contest-media}")
-    private String mediaBucket;
+    @Value("${app.media.max-image-size:10MB}")
+    private DataSize maxImageSize;
 
-    @Value("${app.media.publicBaseUrl:}")
-    private String publicBaseUrl;
+    @Value("${app.media.max-video-size:50MB}")
+    private DataSize maxVideoSize;
 
     public SubmitEntryForContestUseCase(MinioService minioService,
                                         ContestRepository contestRepository,
-                                        SubmissionRepository submissionRepository) {
+                                        SubmissionRepository submissionRepository,
+                                        ParticipantRepository participantRepository,
+                                        ObjectKeyFactory objectKeyFactory) {
         this.minioService = minioService;
         this.contestRepository = contestRepository;
         this.submissionRepository = submissionRepository;
+        this.participantRepository = participantRepository;
+        this.objectKeyFactory = objectKeyFactory;
     }
 
     @Transactional
     public ActionResult<SubmitEntryResponse> execute(String contestId,
-                                                     String participantId,
+                                                     String userId,
+                                                     String name,
                                                      MultipartFile file) {
         // --- 0) Walidacja wejścia ---
+        if (name == null || name.isBlank()) {                                    // ★
+            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST, "Name is required and must be non-empty."));
+        }
         if (file == null || file.isEmpty()) {
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(
                     HttpStatus.BAD_REQUEST, "File is required and must be non-empty."));
         }
-        String contentType = String.valueOf(file.getContentType());
-        boolean allowed = contentType != null && (
-                contentType.equals("image/jpeg") ||
-                        contentType.equals("image/png")  ||
-                        contentType.equals("image/webp") ||
-                        contentType.equals("video/mp4")  ||
-                        contentType.equals("video/quicktime")
-        );
-        if (!allowed) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Only JPEG, PNG, WEBP, MP4 or MOV are allowed."));
-        }
-        long maxBytes = 50L * 1024 * 1024; // 50 MB przykładowo dla wideo
-        if (file.getSize() > maxBytes) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.PAYLOAD_TOO_LARGE, "File too large."));
-        }
 
         // --- 1) Pobierz konkurs ---
-        Optional<Contest> optContest = contestRepository.findById(contestId);
-        if (optContest.isEmpty()) {
+        Contest contest = contestRepository.findById(contestId);
+        if (contest == null) {
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(
                     HttpStatus.NOT_FOUND, "Contest not found."));
         }
-        Contest contest = optContest.get();
+
+        SubmissionMediaPolicy policy = contest.getSubmissionMediaPolicy();
+
+        ProblemDetail pd = validateFileAgainstPolicy(
+                policy, file, maxImageSize, maxVideoSize
+        );
+        if (pd != null) return ActionResult.failure(pd);
 
         // --- 2) Reguły biznesowe udziału ---
         if (!contest.isOpen()) {
@@ -95,41 +104,73 @@ public class SubmitEntryForContestUseCase {
                         HttpStatus.CONFLICT, "Participant limit reached."));
             }
         }
+
+        Participant participant = participantRepository.findsByContestIdAndUserId(contestId, userId);
+        if (participant == null) {
+            if (contest.getParticipantLimit()!=null && contest.getParticipantLimit() > 0) {
+                long currentParticipants = participantRepository.countByContestId(contestId);
+                if (currentParticipants >= contest.getParticipantLimit()) {
+                    return ActionResult.failure(ProblemDetail.forStatusAndDetail(
+                            HttpStatus.CONFLICT, "Participant limit reached."));
+                }
+            }
+            participant = new Participant();
+            participant.setContest(contest);
+            participant.setUserId(userId);
+            participant.getRoles().add(ContestRole.Competitor);
+            participant.setUpdatedAt(now);
+            participantRepository.save(participant);
+        }
         // 1 submission / participant (jeśli taki wymóg)
-        if (submissionRepository.existsByContest_IdAndParticipantId(contestId, participantId)) {
+        if (submissionRepository.existsByContest_IdAndParticipantId(contestId, participant.getId())) {
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(
                     HttpStatus.CONFLICT, "You have already submitted an entry for this contest."));
         }
 
         // --- 3) Upload do MinIO ---
-        String objectKey = null;
-        try {
-            objectKey = generateObjectKey(contestId, participantId, file.getOriginalFilename());
-            minioService.uploadFile(mediaBucket, file, objectKey, contentType);
+        MediaLocation mediaLocation = objectKeyFactory.generateForSubmission(contestId, userId, file.getOriginalFilename());
+        String bucket = mediaLocation.getBucket();
+        String objectKey = mediaLocation.getKey();
 
-            String publicUrl = (publicBaseUrl == null || publicBaseUrl.isBlank())
-                    ? null
-                    : buildPublicUrl(publicBaseUrl, objectKey);
+        try (InputStream in = file.getInputStream()) {
+            MediaRef media = minioService.upload(
+                    bucket,
+                    objectKey,
+                    in,
+                    file.getSize(),
+                    file.getContentType()
+            );
 
-            // --- 4) Zapis Submission w DB ---
-            Submission sub = new Submission();
-            sub.setId(null);
-            sub.setContest(contest);
-            sub.setParticipantId(participantId);
-            sub.setOriginalFilename(file.getOriginalFilename());
-            sub.setCreatedAt(LocalDateTime.now());
-            sub.setFile(new Submission.FileRef(objectKey, publicUrl, contentType, file.getSize()));
+            // --- 6) Zapis Submission w DB ---
+            Submission submission = new Submission();
+            submission.setContest(contest);
+            submission.setParticipant(participant);
+            submission.setOriginalFilename(file.getOriginalFilename());
+            submission.setCreatedAt(LocalDateTime.now());
 
-            Submission saved = submissionRepository.save(sub);
+            String savedKey = media.getObjectKey();
+            String savedContentType = media.getContentType() != null ? media.getContentType() : file.getContentType();
+            long savedSize = media.getBytes() > 0 ? media.getBytes() : file.getSize();
 
-            // --- 5) Response ---
-            return ActionResult.success(new SubmitEntryResponse(saved.getId(), objectKey, publicUrl));
+            submission.setFile(new Submission.FileRef(
+                    savedKey,
+                    null,
+                    savedContentType,
+                    savedSize
+            ));
+
+            Submission saved = submissionRepository.save(submission);
+
+            // --- 7) Response (publicUrl = null; do odtwarzania użyjesz presigned GET) ---
+            return ActionResult.success(new SubmitEntryResponse(
+                    saved.getId(),
+                    savedKey,
+                    null
+            ));
 
         } catch (Exception ex) {
-            // kompensacja: usuń z MinIO, jeśli już wgrane
-            if (objectKey != null) {
-                try { minioService.delete(mediaBucket, objectKey); } catch (Exception ignore) {}
-            }
+            // kompensacja: spróbuj usunąć obiekt z tego samego bucketu/klucza
+            try { minioService.delete(bucket, objectKey); } catch (Exception ignore) {}
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(
                     HttpStatus.INTERNAL_SERVER_ERROR, "Failed to submit entry."));
         }
@@ -137,17 +178,67 @@ public class SubmitEntryForContestUseCase {
 
     /* ===== helpers ===== */
 
-    private static String generateObjectKey(String contestId, String participantId, String originalFilename) {
-        String safeContest = contestId.replaceAll("[^a-zA-Z0-9_-]", "_");
-        String safeUser = participantId.replaceAll("[^a-zA-Z0-9_-]", "_");
-        String ext = "";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            ext = originalFilename.substring(originalFilename.lastIndexOf('.')); // np. ".jpg" / ".mp4"
+    private static ProblemDetail validateFileAgainstPolicy(
+            SubmissionMediaPolicy policy,
+            MultipartFile file,
+            DataSize maxImageSize,
+            DataSize maxVideoSize
+    ) {
+        String contentType = file.getContentType() != null ? file.getContentType().toLowerCase() : "";
+        String ext = extOf(file.getOriginalFilename());
+
+        boolean isImage = contentType.startsWith("image/") || extIn(ext, ".jpg", ".jpeg", ".png", ".webp");
+        boolean isVideo = contentType.startsWith("video/") || extIn(ext, ".mp4", ".mov", ".m4v");
+
+        // --- typy wg polityki ---
+        if (policy == SubmissionMediaPolicy.IMAGES_ONLY && !isImage) {
+            return ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    "This contest accepts images only (JPG, PNG, WEBP).");
         }
-        return "contests/" + safeContest + "/submissions/" + safeUser + "/" + UUID.randomUUID() + ext;
+        if (policy == SubmissionMediaPolicy.VIDEOS_ONLY && !isVideo) {
+            return ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    "This contest accepts videos only (MP4, MOV).");
+        }
+        if (policy == SubmissionMediaPolicy.BOTH && !(isImage || isVideo)) {
+            return ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    "Only images (JPG, PNG, WEBP) or videos (MP4, MOV) are allowed.");
+        }
+
+        // --- rozszerzenia (dodatkowa ochrona) ---
+        if (isImage && !extIn(ext, ".jpg", ".jpeg", ".png", ".webp")) {
+            return ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    "Allowed images: JPG, PNG, WEBP.");
+        }
+        if (isVideo && !extIn(ext, ".mp4", ".mov", ".m4v")) {
+            return ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                    "Allowed videos: MP4, MOV.");
+        }
+
+        // --- rozmiary wg configu ---
+        long size = file.getSize();
+        if (isImage && size > maxImageSize.toBytes()) {
+            return ProblemDetail.forStatusAndDetail(
+                    HttpStatus.PAYLOAD_TOO_LARGE,
+                    "Image too large. Max " + maxImageSize.toMegabytes() + " MB.");
+        }
+        if (isVideo && size > maxVideoSize.toBytes()) {
+            return ProblemDetail.forStatusAndDetail(
+                    HttpStatus.PAYLOAD_TOO_LARGE,
+                    "Video too large. Max " + maxVideoSize.toMegabytes() + " MB.");
+        }
+
+        return null;
     }
 
-    private static String buildPublicUrl(String baseUrl, String key) {
-        return baseUrl.endsWith("/") ? baseUrl + key : baseUrl + "/" + key;
+
+    private static String extOf(String filename) {
+        if (filename == null) return "";
+        int i = filename.lastIndexOf('.');
+        return (i >= 0) ? filename.substring(i).toLowerCase() : "";
     }
+    private static boolean extIn(String ext, String... allowed) {
+        for (String a : allowed) if (ext.equals(a)) return true;
+        return false;
+    }
+
 }

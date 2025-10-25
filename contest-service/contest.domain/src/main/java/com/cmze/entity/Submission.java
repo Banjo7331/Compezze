@@ -57,11 +57,11 @@ public class Submission {
     @Embeddable
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor
     public static class FileRef {
-        @Column(name = "object_key", nullable = false, length = 512)
+        @Column(name = "object_key", length = 512) // <- bez nullable=false
         private String objectKey;
 
-        @Column(name = "public_url", length = 1024)
-        private String url;
+        @Column(name = "bucket", length = 100)     // jeśli masz wiele bucketów
+        private String bucket;
 
         @Column(name = "content_type", length = 100)
         private String contentType;

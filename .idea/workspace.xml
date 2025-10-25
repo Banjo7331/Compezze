@@ -5,10 +5,62 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="78ebc89c-40bb-4c18-b1ca-5f6397d54052" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/.idea/jarRepositories.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/pom.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/AuthApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/config/SecurityConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/controller/AuthController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/dto/AuthRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/dto/LoginRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/dto/RegisterRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/entity/Role.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/entity/User.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/entity/enums/RoleType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/repository/RoleRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/repository/UserRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/security/CustomUserDetails.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/security/CustomUserDetailsService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/security/JwtAuthenticationEntryPoint.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/security/JwtAuthenticationFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/security/JwtTokenProvider.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/service/AuthService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/java/com/cmze/service/JwtService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/identity-service/src/main/resources/application.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/.idea/compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api-gateway/.idea/encodings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/.idea/encodings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/api-gateway/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/api-gateway/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/auth-service/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/auth-service/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eureka-server/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/eureka-server/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/.idea/compiler.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/.idea/encodings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/.idea/jarRepositories.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/AuthApplication.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/config/SecurityConfig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/controller/AuthController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/dto/AuthRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/dto/LoginRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/dto/RegisterRequest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/entity/Role.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/entity/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/entity/enums/RoleType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/repository/RoleRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/repository/UserRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/security/CustomUserDetails.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/security/CustomUserDetailsService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/security/JwtAuthenticationEntryPoint.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/security/JwtAuthenticationFilter.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/security/JwtTokenProvider.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/service/AuthService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/java/com/cmze/service/JwtService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/auth-service/src/main/resources/application.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/survey-service/survey.domain/src/main/java/com/cmze/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/survey-service/survey.domain/src/main/java/com/cmze/entity/User.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -27,20 +79,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/cylwi/OneDrive/Pulpit/Compezze/api-gateway",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/cylwi/OneDrive/Pulpit/Compezze/api-gateway&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration default="true" type="JetRunConfigurationType">
       <module name="Compezze" />
@@ -77,6 +129,7 @@
       <workItem from="1746139752162" duration="156000" />
       <workItem from="1746140732939" duration="1265000" />
       <workItem from="1746142096339" duration="74000" />
+      <workItem from="1754925930393" duration="162000" />
     </task>
     <servers />
   </component>

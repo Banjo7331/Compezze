@@ -3,6 +3,7 @@ package com.cmze.entity;
 import com.cmze.enums.ContestCategory;
 import com.cmze.enums.ContestStatus;
 import com.cmze.enums.SocialPlatform;
+import com.cmze.enums.SubmissionMediaPolicy;
 import jakarta.persistence.*;
 
 import jakarta.validation.constraints.*;
@@ -61,6 +62,10 @@ public class Contest {
 
     @NotNull()
     private String organizerId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "submission_media_policy", nullable = false)
+    private SubmissionMediaPolicy submissionMediaPolicy = SubmissionMediaPolicy.BOTH;
 
     @NotNull()
     @Enumerated(EnumType.STRING)

@@ -1,2 +1,4 @@
-package com.cmze.entity;public class UserDetails {
+package com.cmze.entity;
+
+public class UserDetails {
 }
