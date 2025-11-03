@@ -41,10 +41,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 )
 public class SecurityConfig {
 
-
-    private JwtAuthenticationEntryPoint authenticationEntryPoint;
-
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtAuthenticationEntryPoint authenticationEntryPoint;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     public SecurityConfig(JwtAuthenticationEntryPoint authenticationEntryPoint, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.authenticationEntryPoint = authenticationEntryPoint;
@@ -57,32 +55,32 @@ public class SecurityConfig {
     }
 
     @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf((csrf) -> {
-                    try {
-                        csrf.disable()
-                                .authorizeHttpRequests(authorize -> /*authorize.anyRequest().authenticated()*/
-                                        authorize.requestMatchers(HttpMethod.GET,"/api/**").permitAll()
-                                                .requestMatchers("/api/auth/**").permitAll()
-                                                .anyRequest().permitAll()
-                                ).httpBasic(Customizer.withDefaults());
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-        ).exceptionHandling( exception -> exception
-                .authenticationEntryPoint(authenticationEntryPoint)
-        ).sessionManagement( session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        );
+
+        http.csrf(csrf -> csrf.disable())
+
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated()
+                );
+
+        // 5. Wyłączamy httpBasic (nie chcemy okienka logowania z przeglądarki)
+        // http.httpBasic(basic -> basic.disable()); // Można też tak
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
     }
 }

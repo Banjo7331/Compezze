@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -48,4 +49,9 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "role_id",referencedColumnName = "id"))
     @ManyToMany(fetch = FetchType.LAZY)
     private Set<Role> roles;
+
+    @Column(length = 512)
+    private String refreshToken;
+
+    private Instant refreshTokenExpiry;
 }

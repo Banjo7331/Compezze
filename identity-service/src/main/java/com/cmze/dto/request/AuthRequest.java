@@ -1,4 +1,4 @@
-package com.cmze.dto;
+package com.cmze.dto.request;
 
 import lombok.*;
 

@@ -1,66 +1,46 @@
 package com.cmze.controller;
 
-import com.cmze.dto.AuthRequest;
-import com.cmze.entity.User;
+import com.cmze.dto.request.LoginRequest;
+import com.cmze.dto.request.RefreshRequest;
+import com.cmze.dto.request.RegisterRequest;
+import com.cmze.dto.response.JwtAuthResponse;
 import com.cmze.service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    @Autowired
-    private AuthService service;
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<JwtAuthResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        JwtAuthResponse jwtAuthResponse = authService.login(loginRequest);
+        return ResponseEntity.ok(jwtAuthResponse);
+    }
 
     @PostMapping("/register")
-    public String addNewUser(@RequestBody User user) {
-        return service.saveUser(user);
-    }
-
-    @PostMapping("/token")
-    public String getToken(@RequestBody AuthRequest authRequest) {
-        Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
-        if (authenticate.isAuthenticated()) {
-            return service.generateToken(authRequest.getUsername());
-        } else {
-            throw new RuntimeException("invalid access");
-        }
-    }
-
-    @GetMapping("/validate")
-    public String validateToken(@RequestParam("token") String token) {
-        service.validateToken(token);
-        return "Token is valid";
-    }
-
-    @PostMapping(value = {"/login","/signin"})
-    public ResponseEntity<JwtAuthResponse> login(@Valid @RequestBody LoginDto loginDto) {
-        String token = authService.login(loginDto);
-
-        JwtAuthResponse jwtAuthResponse = new JwtAuthResponse();
-        jwtAuthResponse.setAccessToken(token);
-        return ResponseEntity.ok(jwtAuthResponse);
-    }
-
-    @PostMapping(value = {"/logout","/signout"})
-    public ResponseEntity<JwtAuthResponse> logout(@Valid @RequestBody LoginDto loginDto) {
-        String token = authService.login(loginDto);
-
-        JwtAuthResponse jwtAuthResponse = new JwtAuthResponse();
-        jwtAuthResponse.setAccessToken(token);
-        return ResponseEntity.ok(jwtAuthResponse);
-    }
-
-    @PostMapping(value = {"/register","/singup"})
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterDto registerDto) {
-        System.out.println("test");
-        String response = authService.register(registerDto);
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        String response = authService.register(registerRequest);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<JwtAuthResponse> refresh(@Valid @RequestBody RefreshRequest refreshRequest) {
+        JwtAuthResponse jwtAuthResponse = authService.refresh(refreshRequest);
+        return ResponseEntity.ok(jwtAuthResponse);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(Authentication authentication) {
+        authService.logout(authentication);
+        return ResponseEntity.ok("User logged out successfully!");
     }
 }

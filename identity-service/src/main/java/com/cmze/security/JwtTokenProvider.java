@@ -6,8 +6,9 @@ import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
@@ -18,28 +19,41 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenProvider.class);
+
     @Value("${app.jwt-secret}")
     private String jwtSecret;
 
     @Value("${app.jwt-expiration-milliseconds}")
     private long jwtExpirationDate;
 
+    @Value("${app.jwt-refresh-expiration-milliseconds}")
+    private long jwtRefreshExpirationDate;
+
     public String generateToken(Authentication authentication) {
-
         String username = authentication.getName();
-
         Date currentDate = new Date();
-
         Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
 
-        String token = Jwts.builder()
+        return Jwts.builder()
                 .subject(username)
                 .issuedAt(new Date())
                 .expiration(expireDate)
                 .signWith(key())
                 .compact();
+    }
 
-        return token;
+    public String generateRefreshToken(Authentication authentication) {
+        String username = authentication.getName();
+        Date currentDate = new Date();
+        Date expireDate = new Date(currentDate.getTime() + jwtRefreshExpirationDate);
+
+        return Jwts.builder()
+                .subject(username)
+                .issuedAt(new Date())
+                .expiration(expireDate)
+                .signWith(key())
+                .compact();
     }
 
     private Key key() {
@@ -61,14 +75,20 @@ public class JwtTokenProvider {
                     .verifyWith((SecretKey) key())
                     .build()
                     .parse(token);
-
             return true;
-        } catch (MalformedJwtException | IllegalArgumentException malformedJwtException) {
-            throw new RuntimeException("Invalid JWT");
+        } catch (MalformedJwtException malformedJwtException) {
+            logger.error("Invalid JWT token: {}", malformedJwtException.getMessage());
         } catch (ExpiredJwtException expiredJwtException) {
-            throw new RuntimeException("Expired JWT");
+            logger.error("Expired JWT token: {}", expiredJwtException.getMessage());
         } catch (UnsupportedJwtException unsupportedJwtException) {
-            throw new RuntimeException("Unsupported JWT");
+            logger.error("Unsupported JWT token: {}", unsupportedJwtException.getMessage());
+        } catch (IllegalArgumentException illegalArgumentException) {
+            logger.error("JWT claims string is empty: {}", illegalArgumentException.getMessage());
         }
+        return false;
+    }
+
+    public long getJwtRefreshExpirationDate() {
+        return jwtRefreshExpirationDate;
     }
 }
