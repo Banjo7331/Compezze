@@ -21,7 +21,7 @@ import lombok.Setter;
         uniqueConstraints = @UniqueConstraint(
                 name = "uq_stage_contest_position", columnNames = {"contest_id", "position"})
 )
-public class Stage {
+public abstract class Stage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,7 +41,7 @@ public class Stage {
     @Enumerated(EnumType.STRING)
     private StageType type;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "contest_id", nullable = false)
     private Contest contest;
 }

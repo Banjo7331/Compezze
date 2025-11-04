@@ -2,10 +2,12 @@ package com.cmze.spi.minio;
 
 import com.cmze.shared.MediaRef;
 import io.minio.GetObjectResponse;
+import io.minio.messages.Item;
 
 import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
+import java.util.List;
 
 public interface MinioService {
 
@@ -29,6 +31,8 @@ public interface MinioService {
 
     /** (Opcjonalnie) Podpisany URL do uploadu bezpośrednio z frontu. */
     URL presignPut(String bucket, String objectKey, Duration expiry);
+
+    List<Item> listObjects(String bucket, String prefix);
 }
 
 

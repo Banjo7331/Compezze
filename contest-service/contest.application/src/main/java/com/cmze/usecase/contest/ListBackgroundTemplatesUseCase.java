@@ -6,7 +6,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 
 @UseCase
-public class ListPublicTemplatesUseCase {
+public class ListBackgroundTemplatesUseCase {
 
     private final MinioService minio;
 
@@ -16,7 +16,7 @@ public class ListPublicTemplatesUseCase {
     @Value("${app.media.publicBaseUrl}")
     private String publicBaseUrl;
 
-    public ListPublicTemplatesUseCase(MinioService minio) { this.minio = minio; }
+    public ListBackgroundTemplatesUseCase(MinioService minio) { this.minio = minio; }
 
     @Transactional
     public ActionResult<List<PublicAssetResponse>> execute(String category) {
