@@ -4,19 +4,18 @@ import com.cmze.entity.Stage;
 import com.cmze.enums.JuryRevealMode;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@SuperBuilder
 @Entity
-@Table(name = "stage_jury_config")
-@Getter @Setter
-public class StageJuryConfig {
-    @Id
-    @Column(name = "stage_id")
-    private Long stageId;
-
-    @OneToOne(fetch = FetchType.LAZY, optional = false) @MapsId
-    @JoinColumn(name = "stage_id", nullable = false)
-    private Stage stage;
+@Table(name = "stage_jury")
+@DiscriminatorValue("JURY_VOTE") // Mówi Hibernate, że jeśli type='JURY_VOTE', to jest to ta klasa
+public class JuryVoteStage extends Stage {
 
     @Column(nullable = false)
     private double weight = 1.0;

@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 
 @UseCase
-public class ReorderStagesUseCase {
+public class ReorderContestStagesUseCase {
 
     private final ContestRepository contestRepository;
     private final StageRepository stageRepository;

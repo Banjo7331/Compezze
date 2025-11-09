@@ -1,7 +1,6 @@
 package com.cmze.internal.service.stagesettings.strategy.impl;
 
 import com.cmze.entity.Stage;
-import com.cmze.entity.stagesettings.StageJuryConfig;
 import com.cmze.enums.JuryRevealMode;
 import com.cmze.enums.StageType;
 import com.cmze.internal.service.stagesettings.strategy.StageSettingsStrategy;

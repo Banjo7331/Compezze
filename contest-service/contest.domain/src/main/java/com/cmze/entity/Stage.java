@@ -10,17 +10,16 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@SuperBuilder
 @Entity
-@Table(
-        name = "stages",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uq_stage_contest_position", columnNames = {"contest_id", "position"})
-)
+@Table(name = "stages")
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "stage_type", discriminatorType = DiscriminatorType.STRING)
 public abstract class Stage {
 
     @Id
@@ -39,6 +38,7 @@ public abstract class Stage {
 
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Column(name = "type", insertable = false, updatable = false)
     private StageType type;
 
     @ManyToOne(fetch = FetchType.EAGER)

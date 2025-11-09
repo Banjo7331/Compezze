@@ -27,6 +27,11 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="api-gateway" options="-parameters" />
+      <module name="contest-service" options="-parameters" />
+      <module name="contest.adapter" options="-parameters" />
+      <module name="contest.application" options="-parameters" />
+      <module name="contest.domain" options="-parameters" />
+      <module name="contest.infrastructure" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="identity-service" options="-parameters" />
     </option>

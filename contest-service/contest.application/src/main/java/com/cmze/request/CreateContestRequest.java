@@ -1,8 +1,7 @@
 package com.cmze.request;
 
 import com.cmze.enums.ContestCategory;
-import com.cmze.enums.StageType;
-import com.cmze.request.stagesettings.StageSettingsRequest;
+import com.cmze.request.stages.StageRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -43,28 +42,9 @@ public class CreateContestRequest {
 
     private boolean hasPreliminaryStage = false;
 
+    private String templateId;
+
     @Size(min = 1, max = 10)
     @Valid
     private List<StageRequest> stages;
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class StageRequest {
-        @NotBlank @Size(max = 100)
-        private String name;
-
-        @Min(1)
-        private int position;
-
-        @Min(1)
-        private int durationMinutes;
-
-        @NotNull
-        private StageType type;
-
-        @Valid
-        private StageSettingsRequest settings;
-    }
 }

@@ -2,7 +2,7 @@ package com.cmze.controller;
 
 import com.cmze.request.ReorderStagesRequest;
 import com.cmze.request.UpdateStageRequest;
-import com.cmze.usecase.contest.ReorderStagesUseCase;
+import com.cmze.usecase.contest.ReorderContestStagesUseCase;
 import com.cmze.usecase.contest.UpdateStageUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("contest/{contestId}/stages")
 public class StageController {
 
-    private final ReorderStagesUseCase reorderStagesUseCase;
+    private final ReorderContestStagesUseCase reorderStagesUseCase;
     private final UpdateStageUseCase updateStageUseCase;
 
-    public StageController(ReorderStagesUseCase reorderStagesUseCase,
+    public StageController(ReorderContestStagesUseCase reorderStagesUseCase,
                            UpdateStageUseCase updateStageUseCase
     ) {
         this.reorderStagesUseCase = reorderStagesUseCase;
