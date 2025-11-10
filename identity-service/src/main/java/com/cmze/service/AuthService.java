@@ -1,5 +1,6 @@
 package com.cmze.service;
 
+import com.cmze.dto.request.ChangePasswordRequest;
 import com.cmze.dto.request.LoginRequest;
 import com.cmze.dto.request.RefreshRequest;
 import com.cmze.dto.request.RegisterRequest;
@@ -7,10 +8,11 @@ import com.cmze.dto.response.JwtAuthResponse;
 import com.cmze.entity.Role;
 import com.cmze.entity.User;
 import com.cmze.entity.enums.RoleType;
+import com.cmze.handler.exception.InvalidRequestException;
+import com.cmze.handler.exception.ResourceNotFoundException;
 import com.cmze.repository.RoleRepository;
 import com.cmze.repository.UserRepository;
 import com.cmze.security.JwtTokenProvider;
-import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,6 +20,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Set;
@@ -59,20 +62,19 @@ public class AuthService {
         String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
 
         User user = userRepository.findByUsernameOrEmail(authentication.getName(), authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found after successful authentication"));
 
         user.setRefreshToken(refreshToken);
         user.setRefreshTokenExpiry(Instant.now().plusMillis(jwtTokenProvider.getJwtRefreshExpirationDate()));
         userRepository.save(user);
 
-        // 5. Zwróć oba tokeny do frontendu
         return new JwtAuthResponse(accessToken, refreshToken);
     }
 
     @Transactional
     public void logout(Authentication authentication) {
         User user = userRepository.findByUsernameOrEmail(authentication.getName(), authentication.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found for logout"));
 
         user.setRefreshToken(null);
         user.setRefreshTokenExpiry(null);
@@ -81,12 +83,11 @@ public class AuthService {
 
     @Transactional
     public String register(RegisterRequest registerRequest) {
-        // 1. Sprawdź, czy nazwa użytkownika lub email są już zajęte
         if (userRepository.existsByUsername(registerRequest.getUsername())) {
-            throw new RuntimeException("User with that username already exists");
+            throw new InvalidRequestException("User with that username already exists");
         }
         if (userRepository.existsByEmail(registerRequest.getEmail())) {
-            throw new RuntimeException("Email address already in use");
+            throw new InvalidRequestException("Email address already in use");
         }
 
         User user = new User();
@@ -95,12 +96,13 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
         Role userRole = roleRepository.findByName(RoleType.ROLE_USER)
-                .orElseThrow(() -> new RuntimeException("Error: User Role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Error: Default 'ROLE_USER' not found in database."));
+
         user.setRoles(Set.of(userRole));
 
         userRepository.save(user);
 
-        return "Użytkownik zarejestrowany pomyślnie!";
+        return "User registered successfully!";
     }
 
     @Transactional
@@ -108,29 +110,46 @@ public class AuthService {
         String requestRefreshToken = refreshRequest.getRefreshToken();
 
         if (!jwtTokenProvider.validateToken(requestRefreshToken)) {
-            throw new RuntimeException("Invalid Refresh Token");
+            throw new InvalidRequestException("Invalid Refresh Token");
         }
 
         User user = userRepository.findByRefreshToken(requestRefreshToken)
-                .orElseThrow(() -> new RuntimeException("User not found for this token"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found for this token"));
 
         if (user.getRefreshTokenExpiry().isBefore(Instant.now())) {
             user.setRefreshToken(null);
             user.setRefreshTokenExpiry(null);
             userRepository.save(user);
-            throw new RuntimeException("Refresh token has expired. Please log in again.");
+            throw new InvalidRequestException("Refresh token has expired. Please log in again.");
         }
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(
                 user.getUsername(),
                 null,
                 user.getRoles().stream()
-                        .map(role -> new SimpleGrantedAuthority(role.getName().toString()))
+                        .map(role -> new SimpleGrantedAuthority(role.getName().name()))
                         .collect(Collectors.toList())
         );
 
         String newAccessToken = jwtTokenProvider.generateToken(authentication);
 
         return new JwtAuthResponse(newAccessToken, requestRefreshToken);
+    }
+
+    @Transactional
+    public void changePassword(ChangePasswordRequest request, Authentication authentication) {
+        String username = authentication.getName();
+        User user = userRepository.findByUsernameOrEmail(username, username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new InvalidRequestException("Incorrect old password.");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        user.setRefreshToken(null);
+        user.setRefreshTokenExpiry(null);
+
+        userRepository.save(user);
     }
 }

@@ -2,8 +2,14 @@ package com.cmze.internal.websocket;
 
 import com.cmze.repository.ParticipantRepository;
 import com.cmze.repository.RoomRepository;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 @Component
 public class RoomChannelInterceptor implements ChannelInterceptor {

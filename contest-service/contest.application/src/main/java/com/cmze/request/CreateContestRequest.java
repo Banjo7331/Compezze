@@ -42,6 +42,7 @@ public class CreateContestRequest {
 
     private boolean hasPreliminaryStage = false;
 
+    @NotBlank(message = "A templateId must be selected.")
     private String templateId;
 
     @Size(min = 1, max = 10)

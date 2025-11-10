@@ -1,5 +1,6 @@
 package com.cmze.controller;
 
+import com.cmze.dto.request.ChangePasswordRequest;
 import com.cmze.dto.request.LoginRequest;
 import com.cmze.dto.request.RefreshRequest;
 import com.cmze.dto.request.RegisterRequest;
@@ -7,6 +8,7 @@ import com.cmze.dto.response.JwtAuthResponse;
 import com.cmze.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,8 +41,18 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<String> logout(Authentication authentication) {
         authService.logout(authentication);
         return ResponseEntity.ok("User logged out successfully!");
+    }
+
+    @PostMapping("/change-password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest request,
+                                                 Authentication authentication) {
+        authService.changePassword(request, authentication);
+
+        return ResponseEntity.ok("Password changed successfully. Please log in again.");
     }
 }

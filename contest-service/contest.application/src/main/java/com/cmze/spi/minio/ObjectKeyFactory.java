@@ -8,5 +8,9 @@ public interface ObjectKeyFactory {
 
     MediaLocation generateForTemplate(String contestId, String originalFilename);
 
-    MediaLocation generateForAvatar(String avatarName); // albo avatarForUser(String userId)
+    MediaLocation generateForAvatar(String avatarName);
+
+    MediaLocation generateForContestCover(String organizerId, String originalFilename);
+
+    String getPublicBucket();
 }

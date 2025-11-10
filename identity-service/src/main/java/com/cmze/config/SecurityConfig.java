@@ -76,9 +76,6 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 );
 
-        // 5. Wyłączamy httpBasic (nie chcemy okienka logowania z przeglądarki)
-        // http.httpBasic(basic -> basic.disable()); // Można też tak
-
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

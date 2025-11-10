@@ -34,10 +34,9 @@ public class ContestController {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createContest(@RequestPart("payload") @Valid CreateContestRequest request,
-                                           @RequestPart(value ="image", required = false) MultipartFile image,
                                            @RequestHeader(name="X-User-Id") String organizerId
     ){
-        var result = createContestUseCase.execute(request, image, organizerId);
+        var result = createContestUseCase.execute(request, organizerId);
         return result.toResponseEntity(HttpStatus.CREATED);
     }
 

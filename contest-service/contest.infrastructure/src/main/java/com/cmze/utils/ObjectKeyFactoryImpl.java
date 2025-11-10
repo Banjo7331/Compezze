@@ -42,6 +42,18 @@ public class ObjectKeyFactoryImpl implements ObjectKeyFactory {
         return new MediaLocation(publicBucket, key);
     }
 
+    @Override
+    public MediaLocation generateForContestCover(String organizerId, String originalFilename) {
+        String key = "contests/" + safe(organizerId) + "/covers/"
+                + UUID.randomUUID() + extOf(originalFilename);
+        return new MediaLocation(publicBucket, key);
+    }
+
+    @Override
+    public String getPublicBucket() {
+        return this.publicBucket;
+    }
+
     /* ===== helpers ===== */
 
     private static String safe(String v) {

@@ -11,5 +11,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class MediaLocation {
     private String bucket; // np. contest-private / contest-public
-    private String key;    // np. contests/..../submissions/.../UUID.mp4
+    private String objectKey;    // np. contests/..../submissions/.../UUID.mp4
 }
