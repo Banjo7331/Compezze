@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public class SurveyAttemptRepositoryImpl implements SurveyAttemptRepository {
 
@@ -18,8 +20,8 @@ public class SurveyAttemptRepositoryImpl implements SurveyAttemptRepository {
     }
 
     @Override
-    public SurveyAttempt findById(Long id) {
-        return impl.findById(id).orElseThrow(()-> new RuntimeException("SurveyAttempt not found"));
+    public Optional<SurveyAttempt> findById(Long id) {
+        return impl.findById(id);
     }
 
     @Override
@@ -28,7 +30,7 @@ public class SurveyAttemptRepositoryImpl implements SurveyAttemptRepository {
     }
 
     @Override
-    public Long save(SurveyAttempt attempt) {
-        return impl.save(attempt).getId();
+    public SurveyAttempt save(SurveyAttempt attempt) {
+        return impl.save(attempt);
     }
 }

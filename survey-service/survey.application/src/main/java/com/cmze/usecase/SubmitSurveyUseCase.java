@@ -9,7 +9,6 @@ import com.cmze.repository.SurveyAttemptRepository;
 import com.cmze.repository.SurveyFormRepository;
 import com.cmze.request.SubmitParticipantAnswerRequest;
 import com.cmze.request.SubmitSurveyRequest;
-import com.cmze.response.CreateSurveyResponse;
 import com.cmze.response.SubmitSurveyResponse;
 import com.cmze.shared.ActionResult;
 import jakarta.transaction.Transactional;
@@ -21,7 +20,6 @@ import org.springframework.http.ProblemDetail;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 @UseCase
 public class SubmitSurveyUseCase {

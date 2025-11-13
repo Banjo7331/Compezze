@@ -1,12 +1,15 @@
 package com.cmze.repository;
 
-import com.cmze.entity.Question;
 import com.cmze.entity.SurveyForm;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Optional;
+import java.util.UUID;
+
 public interface SurveyFormRepository {
-    SurveyForm findById(Long Id);
+    Optional<SurveyForm> findById(Long Id);
     Page<SurveyForm> findAll(Pageable pageable);
-    Long save(SurveyForm surveyForm);
+    Page<SurveyForm> findAllPublicAndOwnedByUser(UUID currentUserId, Pageable pageable);
+    SurveyForm save(SurveyForm surveyForm);
 }

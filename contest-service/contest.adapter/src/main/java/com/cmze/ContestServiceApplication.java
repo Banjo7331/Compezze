@@ -7,7 +7,11 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = "com.cmze.external.identity")
+@EnableFeignClients(basePackages = {
+        "com.cmze.external.identity",
+        "com.cmze.external.quiz",
+        "com.cmze.external.survey"
+})
 public class ContestServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(ContestServiceApplication.class,args);

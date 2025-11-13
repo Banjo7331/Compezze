@@ -8,6 +8,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Repository
 public class SurveyFormRepositoryImpl implements SurveyFormRepository {
 
@@ -19,8 +22,8 @@ public class SurveyFormRepositoryImpl implements SurveyFormRepository {
     }
 
     @Override
-    public SurveyForm findById(Long id) {
-        return impl.findById(id).orElseThrow(()-> new RuntimeException("SurveyForm not found"));
+    public Optional<SurveyForm> findById(Long id) {
+        return impl.findById(id);
     }
 
     @Override
@@ -29,7 +32,12 @@ public class SurveyFormRepositoryImpl implements SurveyFormRepository {
     }
 
     @Override
-    public Long save(SurveyForm survey) {
-        return impl.save(survey).getId();
+    public Page<SurveyForm> findAllPublicAndOwnedByUser(UUID currentUserId, Pageable pageable) {
+        return impl.findAllPublicAndOwnedByUser(currentUserId, pageable);
+    }
+
+    @Override
+    public SurveyForm save(SurveyForm survey) {
+        return impl.save(survey);
     }
 }

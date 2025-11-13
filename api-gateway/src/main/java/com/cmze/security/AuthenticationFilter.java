@@ -44,20 +44,6 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                         return this.onError(exchange, "Token is invalid or expired", HttpStatus.UNAUTHORIZED);
                     }
 
-                    Claims claims = jwtValidator.getAllClaimsFromToken(token);
-                    String username = claims.getSubject();
-                    List<String> roles = claims.get("roles", List.class);
-
-                    ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                            .headers(httpHeaders -> {
-                                httpHeaders.set("X-Authenticated-User", username);
-                                httpHeaders.set("X-User-Roles", String.join(",", roles));
-                                httpHeaders.remove(HttpHeaders.AUTHORIZATION);
-                            })
-                            .build();
-
-                    return chain.filter(exchange.mutate().request(mutatedRequest).build());
-
                 } catch (Exception e) {
                     return this.onError(exchange, "Token validation error", HttpStatus.UNAUTHORIZED);
                 }

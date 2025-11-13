@@ -1,27 +1,32 @@
 package com.cmze.configuration;
 
+import com.cmze.security.JwtAuthenticationEntryPoint;
+import com.cmze.security.JwtAuthenticationFilter;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity // Włącza @PreAuthorize (np. aby tylko Admin mógł tworzyć szablony)
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationEntryPoint authenticationEntryPoint,
-                          JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationEntryPoint authenticationEntryPoint, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
-
-    // Ten serwis NIE POTRZEBUJE 'PasswordEncoder' ani 'AuthenticationManager',
-    // ponieważ sam nie loguje - tylko waliduje tokeny.
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http.csrf(csrf -> csrf.disable())
+
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint)
                 )
@@ -29,17 +34,10 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(authorize -> authorize
-                        // TODO: Ustaw swoje publiczne endpointy dla konkursów
-                        // np. .requestMatchers(HttpMethod.GET, "/contests/public").permitAll()
-
-                        // Zezwól na dostęp do Swaggera (jeśli go tu dodasz)
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-
-                        // Reszta endpointów (np. POST /contests) wymaga autoryzacji
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 );
 
-        // Dodajemy nasz filtr, który odczyta token i ustawi użytkownika w kontekście
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

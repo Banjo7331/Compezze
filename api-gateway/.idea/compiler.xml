@@ -34,6 +34,16 @@
       <module name="contest.infrastructure" options="-parameters" />
       <module name="eureka-server" options="-parameters" />
       <module name="identity-service" options="-parameters" />
+      <module name="quiz-service" options="-parameters" />
+      <module name="quiz.adapter" options="-parameters" />
+      <module name="quiz.application" options="-parameters" />
+      <module name="quiz.domain" options="-parameters" />
+      <module name="quiz.infrastructure" options="-parameters" />
+      <module name="survey-service" options="-parameters" />
+      <module name="survey.adapter" options="-parameters" />
+      <module name="survey.application" options="-parameters" />
+      <module name="survey.domain" options="-parameters" />
+      <module name="survey.infrastructure" options="-parameters" />
     </option>
   </component>
 </project>

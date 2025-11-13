@@ -1,11 +1,13 @@
 package com.cmze.entity;
 
+import com.cmze.enums.QuestionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -13,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "survey-questions")
+@Table(name = "questions")
 public class Question {
 
     @Id
@@ -23,15 +25,16 @@ public class Question {
     @Column(nullable = false)
     private String title;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String type;
+    private QuestionType type;
 
     @ElementCollection
-    @CollectionTable(name = "survey_possible_choices", joinColumns = @JoinColumn(name = "question_id"))
-    @Column(name = "possiblechoice")
-    private List<String> possibleChoices;
+    @CollectionTable(name = "question_choices", joinColumns = @JoinColumn(name = "question_id"))
+    @Column(name = "choice")
+    private List<String> possibleChoices = new ArrayList<>();
 
-    @ManyToOne
-    @JoinColumn(name = "survey_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "survey_form_id", nullable = false)
     private SurveyForm surveyForm;
 }

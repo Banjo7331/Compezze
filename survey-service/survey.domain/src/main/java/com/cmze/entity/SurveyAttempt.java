@@ -8,26 +8,32 @@ import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "survey-attempt")
+@Table(name = "survey_attempts")
 public class SurveyAttempt {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "participant_id", nullable = false, unique = true)
+    private SurveyEntrant participant;
 
-    @OneToMany(mappedBy = "filledSurvey", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ParticipantAnswer> participantAnswers;
+    @OneToMany(mappedBy = "surveyAttempt", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ParticipantAnswer> participantAnswers = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "survey_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "survey_form_id", nullable = false)
     private SurveyForm survey;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "room_result_id")
+    private SurveyRoom roomResult;
 }

@@ -1,70 +1,53 @@
 package com.cmze.controller;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.socket.messaging.SessionConnectedEvent;
-import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import com.cmze.request.CreateSurveyRoomRequest;
+import com.cmze.usecase.CreateSurveyRoomUseCase;
+import com.cmze.usecase.JoinSurveyRoomUseCase;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
 
-@Controller
-@RequiredArgsConstructor
+@RestController
+@RequestMapping("survey/room")
 public class RoomController {
 
-    private final SimpMessagingTemplate messagingTemplate;
+    private final CreateSurveyRoomUseCase createSurveyRoomUseCase;
+    private final JoinSurveyRoomUseCase joinSurveyRoomUseCase;
 
-    private final Map<String, String> socketRoomMap = new ConcurrentHashMap<>();
-    private final Map<String, String> socketUserMap = new ConcurrentHashMap<>();
-
-    @EventListener
-    public void handleConnect(SessionConnectedEvent event) {
-        String sessionId = StompHeaderAccessor.wrap(event.getMessage()).getSessionId();
-        System.out.println("Client connected: " + sessionId);
-        messagingTemplate.convertAndSend("/topic/userJoined", "User joined: " + sessionId);
+    public RoomController(CreateSurveyRoomUseCase createSurveyRoomUseCase,
+                          JoinSurveyRoomUseCase joinSurveyRoomUseCase) {
+        this.createSurveyRoomUseCase = createSurveyRoomUseCase;
+        this.joinSurveyRoomUseCase = joinSurveyRoomUseCase;
     }
 
-    @EventListener
-    public void handleDisconnect(SessionDisconnectEvent event) {
-        String sessionId = StompHeaderAccessor.wrap(event.getMessage()).getSessionId();
-        System.out.println("Client disconnected: " + sessionId);
+    @PostMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> createRoom(
+            @RequestBody @Valid CreateSurveyRoomRequest request,
+            Authentication authentication) {
 
-        String roomId = socketRoomMap.remove(sessionId);
-        String userId = socketUserMap.remove(sessionId);
+        UUID creatorUserId = (UUID) authentication.getPrincipal();
 
-        if (roomId != null && userId != null) {
-            CreateSurveyRoomResultDto resultDto = new CreateSurveyRoomResultDto(null, null, null);
-            surveyRoomService.closeRoom(roomId, userId, resultDto, null);
-        }
+        var result = createSurveyRoomUseCase.execute(request, creatorUserId);
+
+        return result.toResponseEntity(HttpStatus.CREATED);
     }
 
-    @MessageMapping("/roomCreation")
-    public void handleRoomCreation(
-            @Header("simpSessionId") String sessionId,
-            @Payload Map<String, String> payload) {
-        String roomId = payload.get("roomId");
-        String userId = payload.get("userId");
+    @PostMapping("/{roomId}/join")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> joinRoom(
+            @PathVariable UUID roomId,
+            Authentication authentication
+    ) {
+        UUID participantUserId = (UUID) authentication.getPrincipal();
 
-        socketRoomMap.put(sessionId, roomId);
-        socketUserMap.put(sessionId, userId);
+        var result = joinSurveyRoomUseCase.execute(roomId, participantUserId);
 
-        System.out.println("Room created by user " + userId + " for room " + roomId);
-    }
-
-    @MessageMapping("/surveyCreation")
-    public void handleSurveyCreation(@Payload Map<String, Object> submittedData) {
-        messagingTemplate.convertAndSend("/topic/surveyCreated", submittedData);
-    }
-
-    @MessageMapping("/surveySubmission")
-    public void handleSurveySubmission(@Payload Map<String, Object> submittedData) {
-        System.out.println("Survey submitted: " + submittedData);
-        messagingTemplate.convertAndSend("/topic/surveySubmitted", submittedData);
+        return result.toResponseEntity(HttpStatus.OK);
     }
 }

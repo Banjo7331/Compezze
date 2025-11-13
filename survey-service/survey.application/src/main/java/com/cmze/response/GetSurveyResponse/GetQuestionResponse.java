@@ -1,5 +1,6 @@
 package com.cmze.response.GetSurveyResponse;
 
+import com.cmze.enums.QuestionType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,5 +15,6 @@ import java.util.List;
 public class GetQuestionResponse {
     private Long id;
     private String title;
-    private List<GetQuestionResponse> questions;
+    private QuestionType type;
+    private List<String> possibleChoices;
 }

@@ -1,9 +1,6 @@
 package com.cmze.security;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
@@ -18,6 +15,7 @@ import java.security.Key;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -36,7 +34,12 @@ public class JwtTokenProvider {
 
     public String generateToken(Authentication authentication) {
 
-        String username = authentication.getName();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        String userId = userDetails.getId().toString();
+        String username = userDetails.getUsername();
+        String email = userDetails.getEmail();
+
         Date currentDate = new Date();
         Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
 
@@ -46,42 +49,58 @@ public class JwtTokenProvider {
                 .collect(Collectors.toList());
 
         String token = Jwts.builder()
-                .subject(username)
+                .subject(userId)
                 .issuedAt(new Date())
                 .expiration(expireDate)
                 .signWith(key())
-                // --- 2. DODAJ ROLE DO TOKENA ---
                 .claim("roles", roles)
+                .claim("username", username)
+                .claim("email", email)
                 .compact();
 
         return token;
     }
 
     public String generateRefreshToken(Authentication authentication) {
-        String username = authentication.getName();
+        String userId = ((CustomUserDetails) authentication.getPrincipal()).getId().toString();
         Date currentDate = new Date();
         Date expireDate = new Date(currentDate.getTime() + jwtRefreshExpirationDate);
 
         return Jwts.builder()
-                .subject(username)
+                .subject(userId)
                 .issuedAt(new Date())
                 .expiration(expireDate)
                 .signWith(key())
                 .compact();
     }
 
+
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
-    public String getUsername(String token) {
+    private Claims getAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith((SecretKey) key())
                 .build()
                 .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+                .getPayload();
     }
+
+    public UUID getUserId(String token) {
+        String subject = getAllClaims(token).getSubject();
+        return UUID.fromString(subject);
+    }
+
+    public String getUsername(String token) {
+        return getAllClaims(token).get("username", String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> getRoles(String token) {
+        return getAllClaims(token).get("roles", List.class);
+    }
+
 
     public boolean validateToken(String token) {
         try {
