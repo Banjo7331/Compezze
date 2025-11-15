@@ -1,6 +1,5 @@
-package com.cmze.request;
+package com.cmze.request.SubmitSurveyAttemptRequest;
 
-import com.cmze.entity.Question;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -18,7 +17,7 @@ public class SubmitParticipantAnswerRequest {
 
     @NotNull(message = "Answer list cannot be null.")
     @Size(max = 8, message = "There can not be more than 8 possible choices.")
-    private List<String> answer;
+    private List<String> answers;
 
     @NotNull(message = "Question must be provided.")
     private Long questionId;

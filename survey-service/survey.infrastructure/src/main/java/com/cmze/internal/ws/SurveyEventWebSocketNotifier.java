@@ -1,0 +1,77 @@
+package com.cmze.internal.ws;
+
+import com.cmze.entity.SurveyEntrant;
+import com.cmze.entity.SurveyRoom;
+import com.cmze.ws.event.EntrantJoinedEvent;
+import com.cmze.ws.event.RoomClosedEvent;
+import com.cmze.ws.event.SurveyAttemptSubmittedEvent;
+import com.cmze.internal.ws.messages.LiveResultUpdateSocketMessage;
+import com.cmze.internal.ws.messages.RoomClosedSocketMessage;
+import com.cmze.internal.ws.messages.UserJoinedSocketMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+@Service
+public class SurveyEventWebSocketNotifier {
+
+    private static final Logger logger = LoggerFactory.getLogger(SurveyEventWebSocketNotifier.class);
+
+    private final SimpMessagingTemplate messagingTemplate;
+    private final SurveyResultCounter resultsCounter;
+
+    public SurveyEventWebSocketNotifier(SimpMessagingTemplate messagingTemplate,
+                                        SurveyResultCounter resultsCounter) {
+        this.messagingTemplate = messagingTemplate;
+        this.resultsCounter = resultsCounter;
+    }
+
+    @EventListener
+    public void handleParticipantJoined(EntrantJoinedEvent event) {
+        SurveyEntrant participant = event.getParticipant();
+        UUID roomId = participant.getSurveyRoom().getId();
+        String topic = "/topic/room/" + roomId;
+
+        UserJoinedSocketMessage payload = new UserJoinedSocketMessage(
+                participant.getId(),
+                participant.getUserId(),
+                event.getNewParticipantCount()
+        );
+
+        logger.info("Sending USER_JOINED to {}: userId {}", topic, participant.getUserId());
+        messagingTemplate.convertAndSend(topic, payload);
+    }
+
+
+    @EventListener
+    public void handleSurveySubmitted(SurveyAttemptSubmittedEvent event) {
+        SurveyRoom room = event.getSurveyAttempt().getParticipant().getSurveyRoom();
+        UUID roomId = room.getId();
+        String topic = "/topic/room/" + roomId;
+
+        FinalRoomResultDto liveResults = resultsCounter.calculate(room);
+
+        LiveResultUpdateSocketMessage payload = new LiveResultUpdateSocketMessage(liveResults);
+
+        logger.info("Sending LIVE_RESULTS_UPDATE to {}: {} submissions", topic, liveResults.getTotalSubmissions());
+        messagingTemplate.convertAndSend(topic, payload);
+    }
+
+    @EventListener
+    public void handleRoomClosed(RoomClosedEvent event) {
+        SurveyRoom room = event.getRoom();
+        UUID roomId = room.getId();
+        String topic = "/topic/room/" + roomId;
+
+        FinalRoomResultDto finalResults = resultsCounter.calculate(room);
+
+        RoomClosedSocketMessage payload = new RoomClosedSocketMessage(finalResults);
+
+        logger.info("Sending ROOM_CLOSED to {}: {} participants", topic, finalResults.getTotalParticipants());
+        messagingTemplate.convertAndSend(topic, payload);
+    }
+}

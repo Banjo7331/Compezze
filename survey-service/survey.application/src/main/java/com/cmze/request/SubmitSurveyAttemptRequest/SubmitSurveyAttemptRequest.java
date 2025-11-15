@@ -1,7 +1,6 @@
-package com.cmze.request;
+package com.cmze.request.SubmitSurveyAttemptRequest;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -15,7 +14,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class SubmitSurveyRequest {
+public class SubmitSurveyAttemptRequest {
 
     @NotNull(message = "User choices must not be null.")
     @Size(min = 1, max = 20, message = "There must be between 1 and 20 answers for the survey.")

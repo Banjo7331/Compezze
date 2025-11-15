@@ -37,4 +37,7 @@ public class SurveyRoom {
 
     @Column(name = "user_id", nullable = false)
     private UUID userId;
+
+    @Column(name = "is_open", nullable = false)
+    private boolean isOpen = true;
 }

@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public class QuestionRepositoryImpl implements QuestionRepository {
 
@@ -18,8 +20,8 @@ public class QuestionRepositoryImpl implements QuestionRepository {
     }
 
     @Override
-    public Question findById(Long id) {
-        return impl.findById(id).orElseThrow(()-> new RuntimeException("Question not found"));
+    public Optional<Question> findById(Long id) {
+        return impl.findById(id);
     }
 
     @Override
