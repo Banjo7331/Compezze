@@ -30,7 +30,7 @@ public class QuestionRepositoryImpl implements QuestionRepository {
     }
 
     @Override
-    public Long save(Question question) {
-        return impl.save(question).getId();
+    public Question save(Question question) {
+        return impl.save(question);
     }
 }

@@ -9,5 +9,5 @@ import java.util.Optional;
 public interface QuestionRepository {
     Optional<Question> findById(Long id);
     Page<Question> findAllForSurvey(Long surveyId, Pageable pageable);
-    Long save(Question question);
+    Question save(Question question);
 }

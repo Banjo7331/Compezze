@@ -5,6 +5,9 @@ import com.cmze.external.jpa.SurveyRoomJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Repository
 public class SurveyRoomRepositoryImpl implements SurveyRoomRepository{
 
@@ -18,5 +21,10 @@ public class SurveyRoomRepositoryImpl implements SurveyRoomRepository{
     @Override
     public SurveyRoom save(SurveyRoom surveyRoom) {
         return impl.save(surveyRoom);
+    }
+
+    @Override
+    public Optional<SurveyRoom> findById(UUID roomId) {
+        return impl.findById(roomId);
     }
 }

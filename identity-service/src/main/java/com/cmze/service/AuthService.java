@@ -12,12 +12,14 @@ import com.cmze.handler.exception.InvalidRequestException;
 import com.cmze.handler.exception.ResourceNotFoundException;
 import com.cmze.repository.RoleRepository;
 import com.cmze.repository.UserRepository;
+import com.cmze.security.CustomUserDetails;
 import com.cmze.security.JwtTokenProvider;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -123,12 +125,12 @@ public class AuthService {
             throw new InvalidRequestException("Refresh token has expired. Please log in again.");
         }
 
+        UserDetails userDetails = CustomUserDetails.build(user);
+
         Authentication authentication = new UsernamePasswordAuthenticationToken(
-                user.getUsername(),
+                userDetails,
                 null,
-                user.getRoles().stream()
-                        .map(role -> new SimpleGrantedAuthority(role.getName().name()))
-                        .collect(Collectors.toList())
+                userDetails.getAuthorities()
         );
 
         String newAccessToken = jwtTokenProvider.generateToken(authentication);

@@ -21,26 +21,26 @@ public class SurveyEntrantRepositoryImpl implements SurveyEntrantRepository{
 
     @Override
     public Optional<SurveyEntrant> findById(Long Id) {
-        return Optional.empty();
+        return impl.findById(Id);
     }
 
     @Override
     public Optional<SurveyEntrant> findBySurveyRoom_IdAndParticipantUserId(UUID roomId, UUID entrantId) {
-        return Optional.empty();
+        return impl.findBySurveyRoom_IdAndUserId(roomId, entrantId);
     }
 
     @Override
     public SurveyEntrant save(SurveyEntrant entrant) {
-        return null;
+        return impl.save(entrant);
     }
 
     @Override
     public boolean existsBySurveyRoom_IdAndParticipantUserId(UUID roomId, UUID participantUserId) {
-        return false;
+        return impl.existsBySurveyRoom_IdAndUserId(roomId, participantUserId);
     }
 
     @Override
     public Long countBySurveyRoom_Id(UUID roomId) {
-        return 0;
+        return impl.countBySurveyRoom_Id(roomId);
     }
 }
