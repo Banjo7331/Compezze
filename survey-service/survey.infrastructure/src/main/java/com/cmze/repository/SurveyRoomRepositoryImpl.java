@@ -27,4 +27,9 @@ public class SurveyRoomRepositoryImpl implements SurveyRoomRepository{
     public Optional<SurveyRoom> findById(UUID roomId) {
         return impl.findById(roomId);
     }
+
+    @Override
+    public Optional<SurveyRoom> findByIdWithSurveyAndQuestions(UUID roomId) {
+        return impl.findByIdWithSurveyAndQuestions(roomId);
+    }
 }

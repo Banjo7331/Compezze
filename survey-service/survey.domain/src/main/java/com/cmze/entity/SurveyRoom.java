@@ -22,9 +22,6 @@ public class SurveyRoom {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToMany(mappedBy = "roomResult", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<SurveyAttempt> surveyAttempts = new ArrayList<>();
-
     @OneToMany(mappedBy = "surveyRoom", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SurveyEntrant> participants = new ArrayList<>();
 

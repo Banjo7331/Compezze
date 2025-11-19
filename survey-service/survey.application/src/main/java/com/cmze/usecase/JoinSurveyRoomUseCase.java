@@ -36,7 +36,7 @@ public class JoinSurveyRoomUseCase {
 
     public ActionResult<JoinSurveyRoomResponse> execute(UUID roomId, UUID participantUserId) {
         try {
-            Optional<SurveyRoom> roomOpt = surveyRoomRepository.findById(roomId);
+            Optional<SurveyRoom> roomOpt = surveyRoomRepository.findByIdWithSurveyAndQuestions(roomId);
             if (roomOpt.isEmpty()) {
                 logger.warn("Join failed: Room {} not found", roomId);
                 return ActionResult.failure(ProblemDetail.forStatusAndDetail(

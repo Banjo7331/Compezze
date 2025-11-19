@@ -6,6 +6,7 @@ import com.cmze.repository.SurveyFormRepository;
 import com.cmze.repository.SurveyRoomRepository;
 import com.cmze.request.CreateSurveyRoomRequest;
 import com.cmze.response.CreateSurveyRoomResponse;
+import com.cmze.response.JoinSurveyRoomResponse;
 import com.cmze.shared.ActionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +24,14 @@ public class CreateSurveyRoomUseCase {
 
     private final SurveyFormRepository surveyFormRepository;
     private final SurveyRoomRepository surveyRoomRepository;
+    private final JoinSurveyRoomUseCase joinSurveyRoomUseCase;
 
     public CreateSurveyRoomUseCase(SurveyRoomRepository surveyRoomRepository,
-                                   SurveyFormRepository surveyFormRepository) {
+                                   SurveyFormRepository surveyFormRepository,
+                                   JoinSurveyRoomUseCase joinSurveyRoomUseCase) {
         this.surveyRoomRepository = surveyRoomRepository;
         this.surveyFormRepository = surveyFormRepository;
+        this.joinSurveyRoomUseCase = joinSurveyRoomUseCase;
     }
 
     @Transactional
@@ -62,9 +66,27 @@ public class CreateSurveyRoomUseCase {
 
             SurveyRoom savedRoom = surveyRoomRepository.save(room);
 
+            ActionResult<JoinSurveyRoomResponse> joinResult = joinSurveyRoomUseCase.execute(
+                    savedRoom.getId(),
+                    creatorUserId
+            );
+
+            if (joinResult.isFailure()) {
+                logger.error("FATAL: Failed to automatically join room {} after creation. Rolling back.", savedRoom.getId());
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Room created but failed to join host. Rolling back operation."
+                ));
+            }
+
             logger.info("Room {} created successfully for survey {}", savedRoom.getId(), surveyForm.getId());
 
-            CreateSurveyRoomResponse response = new CreateSurveyRoomResponse(savedRoom.getId());
+            CreateSurveyRoomResponse response = new CreateSurveyRoomResponse(
+                    savedRoom.getId(),
+                    savedRoom.getUserId(),
+                    savedRoom.getSurvey().getId(),
+                    savedRoom.getMaxParticipants()
+            );
             return ActionResult.success(response);
 
         } catch (Exception e) {

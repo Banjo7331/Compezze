@@ -14,4 +14,7 @@ import java.util.UUID;
 public class CreateSurveyRoomResponse {
 
     private UUID roomId;
+    private UUID hostId;
+    private Long surveyFormId;
+    private Integer maxParticipants;
 }

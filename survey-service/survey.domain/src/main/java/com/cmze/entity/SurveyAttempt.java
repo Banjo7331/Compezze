@@ -32,8 +32,4 @@ public class SurveyAttempt {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "survey_form_id", nullable = false)
     private SurveyForm survey;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_result_id")
-    private SurveyRoom roomResult;
 }

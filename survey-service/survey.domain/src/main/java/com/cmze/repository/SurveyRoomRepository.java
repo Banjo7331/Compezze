@@ -8,4 +8,5 @@ import java.util.UUID;
 public interface SurveyRoomRepository {
     SurveyRoom save(SurveyRoom surveyRoom);
     Optional<SurveyRoom> findById(UUID roomId);
+    Optional<SurveyRoom> findByIdWithSurveyAndQuestions(UUID roomId);
 }
