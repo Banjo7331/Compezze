@@ -5,6 +5,7 @@ import com.cmze.entity.SurveyRoom;
 import com.cmze.repository.SurveyFormRepository;
 import com.cmze.repository.SurveyRoomRepository;
 import com.cmze.request.CreateSurveyRoomRequest;
+import com.cmze.request.JoinSurveyRoomRequest;
 import com.cmze.response.CreateSurveyRoomResponse;
 import com.cmze.response.JoinSurveyRoomResponse;
 import com.cmze.shared.ActionResult;
@@ -68,7 +69,8 @@ public class CreateSurveyRoomUseCase {
 
             ActionResult<JoinSurveyRoomResponse> joinResult = joinSurveyRoomUseCase.execute(
                     savedRoom.getId(),
-                    creatorUserId
+                    creatorUserId,
+                    new JoinSurveyRoomRequest(null)
             );
 
             if (joinResult.isFailure()) {

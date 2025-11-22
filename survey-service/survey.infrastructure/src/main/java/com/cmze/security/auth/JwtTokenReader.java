@@ -1,4 +1,4 @@
-package com.cmze.security;
+package com.cmze.security.auth;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;

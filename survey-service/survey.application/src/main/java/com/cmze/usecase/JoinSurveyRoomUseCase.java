@@ -4,10 +4,12 @@ import com.cmze.entity.SurveyEntrant;
 import com.cmze.entity.SurveyRoom;
 import com.cmze.repository.SurveyEntrantRepository;
 import com.cmze.repository.SurveyRoomRepository;
+import com.cmze.request.JoinSurveyRoomRequest;
 import com.cmze.response.GetSurveyResponse.GetQuestionResponse;
 import com.cmze.response.GetSurveyResponse.GetSurveyFormResponse;
 import com.cmze.response.JoinSurveyRoomResponse;
 import com.cmze.shared.ActionResult;
+import com.cmze.spi.helpers.invites.SoulboundTokenService;
 import com.cmze.ws.event.EntrantJoinedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,17 +26,20 @@ public class JoinSurveyRoomUseCase {
     private static final Logger logger = LoggerFactory.getLogger(JoinSurveyRoomUseCase.class);
     private final SurveyRoomRepository surveyRoomRepository;
     private final SurveyEntrantRepository surveyEntrantRepository;
+    private final SoulboundTokenService soulboundTokenService;
     private final ApplicationEventPublisher eventPublisher;
 
     public JoinSurveyRoomUseCase(SurveyRoomRepository surveyRoomRepository,
                                  SurveyEntrantRepository surveyEntrantRepository,
+                                 SoulboundTokenService soulboundTokenService,
                                  ApplicationEventPublisher eventPublisher) {
         this.surveyRoomRepository = surveyRoomRepository;
         this.surveyEntrantRepository = surveyEntrantRepository;
+        this.soulboundTokenService = soulboundTokenService;
         this.eventPublisher = eventPublisher;
     }
 
-    public ActionResult<JoinSurveyRoomResponse> execute(UUID roomId, UUID participantUserId) {
+    public ActionResult<JoinSurveyRoomResponse> execute(UUID roomId, UUID participantUserId, JoinSurveyRoomRequest request) {
         try {
             Optional<SurveyRoom> roomOpt = surveyRoomRepository.findByIdWithSurveyAndQuestions(roomId);
             if (roomOpt.isEmpty()) {
@@ -58,6 +63,14 @@ public class JoinSurveyRoomUseCase {
                 logger.warn("Join failed: Room {} is full ({} participants)", roomId, currentSize);
                 return ActionResult.failure(ProblemDetail.forStatusAndDetail(
                         HttpStatus.CONFLICT, "This room is full."
+                ));
+            }
+
+            if (room.isPrivate() && !isAccessAllowed(room, participantUserId, request.getInvitationToken())) {
+                logger.warn("Join failed: User {} denied access to private room {}", participantUserId, roomId);
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(
+                        HttpStatus.FORBIDDEN,
+                        "This room is private. You need a valid invitation link assigned to your account."
                 ));
             }
 
@@ -91,6 +104,21 @@ public class JoinSurveyRoomUseCase {
                     HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred."
             ));
         }
+    }
+
+    private boolean isAccessAllowed(SurveyRoom room, UUID participantUserId, String token) {
+        if (room.getUserId().equals(participantUserId)) {
+            return true;
+        }
+        if (token != null && !token.isBlank()) {
+            return soulboundTokenService.validateSoulboundToken(
+                    token,
+                    participantUserId,
+                    room.getId()
+            );
+        }
+
+        return false;
     }
 
     private GetSurveyFormResponse mapSurveyToDto(com.cmze.entity.SurveyForm survey) {

@@ -1,4 +1,4 @@
-package com.cmze.internal.ws;
+package com.cmze.spi.helpers.room;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

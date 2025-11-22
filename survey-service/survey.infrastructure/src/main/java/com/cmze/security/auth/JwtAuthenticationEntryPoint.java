@@ -1,4 +1,4 @@
-package com.cmze.security;
+package com.cmze.security.auth;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

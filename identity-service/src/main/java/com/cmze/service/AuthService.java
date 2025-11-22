@@ -14,6 +14,7 @@ import com.cmze.repository.RoleRepository;
 import com.cmze.repository.UserRepository;
 import com.cmze.security.CustomUserDetails;
 import com.cmze.security.JwtTokenProvider;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -153,5 +154,19 @@ public class AuthService {
         user.setRefreshTokenExpiry(null);
 
         userRepository.save(user);
+    }
+
+    private ResponseCookie createRefreshTokenCookie(String token, long maxAgeSeconds) {
+        return ResponseCookie.from("refreshToken", token)
+                .httpOnly(true)        // Kluczowe: JS nie ma dostępu
+                .secure(false)         // Ustaw TRUE na produkcji (wymaga HTTPS)
+                .sameSite("Strict")    // Ochrona przed CSRF
+                .path("/")             // Ustawiamy na root, aby działało przez Gateway bez problemów ze ścieżkami
+                .maxAge(maxAgeSeconds)
+                .build();
+    }
+
+    private ResponseCookie createEmptyCookie() {
+        return createRefreshTokenCookie("", 0); // Ciasteczko wygasające natychmiast
     }
 }

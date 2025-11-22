@@ -1,6 +1,6 @@
 package com.cmze.configuration;
 
-import com.cmze.security.JwtTokenReader;
+import com.cmze.security.auth.JwtTokenReader;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.Ordered;

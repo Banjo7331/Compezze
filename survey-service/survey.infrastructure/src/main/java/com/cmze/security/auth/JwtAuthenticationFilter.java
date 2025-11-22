@@ -1,4 +1,4 @@
-package com.cmze.security;
+package com.cmze.security.auth;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

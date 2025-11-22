@@ -2,7 +2,10 @@ package com.cmze.internal.ws;
 
 import com.cmze.entity.SurveyEntrant;
 import com.cmze.entity.SurveyRoom;
+import com.cmze.internal.ws.messages.InvitationSocketMessage;
+import com.cmze.spi.helpers.room.FinalRoomResultDto;
 import com.cmze.ws.event.EntrantJoinedEvent;
+import com.cmze.ws.event.InvitationsGeneratedEvent;
 import com.cmze.ws.event.RoomClosedEvent;
 import com.cmze.ws.event.SurveyAttemptSubmittedEvent;
 import com.cmze.internal.ws.messages.LiveResultUpdateSocketMessage;
@@ -22,10 +25,10 @@ public class SurveyEventWebSocketNotifier {
     private static final Logger logger = LoggerFactory.getLogger(SurveyEventWebSocketNotifier.class);
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final SurveyResultCounter resultsCounter;
+    private final SurveyResultCounterImpl resultsCounter;
 
     public SurveyEventWebSocketNotifier(SimpMessagingTemplate messagingTemplate,
-                                        SurveyResultCounter resultsCounter) {
+                                        SurveyResultCounterImpl resultsCounter) {
         this.messagingTemplate = messagingTemplate;
         this.resultsCounter = resultsCounter;
     }
@@ -73,5 +76,25 @@ public class SurveyEventWebSocketNotifier {
 
         logger.info("Sending ROOM_CLOSED to {}: {} participants", topic, finalResults.getTotalParticipants());
         messagingTemplate.convertAndSend(topic, payload);
+    }
+
+    @EventListener
+    public void handleInvitationsGenerated(InvitationsGeneratedEvent event) {
+        logger.info("Processing generated invitations for room {}", event.getRoomId());
+
+        event.getInvitations().forEach((userId, token) -> {
+
+            InvitationSocketMessage payload = new InvitationSocketMessage(
+                    event.getRoomId(),
+                    event.getSurveyTitle(),
+                    token
+            );
+
+            messagingTemplate.convertAndSendToUser(
+                    userId.toString(),
+                    "/queue/invitations",
+                    payload
+            );
+        });
     }
 }

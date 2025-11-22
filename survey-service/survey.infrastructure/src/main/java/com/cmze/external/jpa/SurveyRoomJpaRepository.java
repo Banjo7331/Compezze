@@ -1,6 +1,8 @@
 package com.cmze.external.jpa;
 
 import com.cmze.entity.SurveyRoom;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,4 +16,7 @@ public interface SurveyRoomJpaRepository extends JpaRepository<SurveyRoom, UUID>
             "LEFT JOIN FETCH s.questions " +
             "WHERE sr.id = :roomId")
     Optional<SurveyRoom> findByIdWithSurveyAndQuestions(@Param("roomId") UUID roomId);
+
+    @Query("SELECT r FROM SurveyRoom r WHERE r.isOpen = true")
+    Page<SurveyRoom> findAllByIsOpenTrue(Pageable pageable);
 }

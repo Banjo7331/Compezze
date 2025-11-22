@@ -1,4 +1,4 @@
-package com.cmze.internal.ws;
+package com.cmze.spi.helpers.room;
 
 import com.cmze.enums.QuestionType;
 import lombok.AllArgsConstructor;

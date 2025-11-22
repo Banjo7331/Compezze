@@ -50,7 +50,7 @@ public class User {
     @JoinTable(name = "users_roles",
             joinColumns = @JoinColumn(name ="user_id",referencedColumnName = "id"),
             inverseJoinColumns = @JoinColumn(name = "role_id",referencedColumnName = "id"))
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<Role> roles = new HashSet<>();
 
     @Column(length = 512)

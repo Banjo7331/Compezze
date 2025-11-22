@@ -2,6 +2,9 @@ package com.cmze.internal.ws;
 
 import com.cmze.entity.*;
 import com.cmze.enums.QuestionType;
+import com.cmze.spi.helpers.room.FinalRoomResultDto;
+import com.cmze.spi.helpers.room.QuestionResultDto;
+import com.cmze.spi.helpers.room.SurveyResultCounter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +16,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
-public class SurveyResultCounter {
+public class SurveyResultCounterImpl implements SurveyResultCounter {
 
     public FinalRoomResultDto calculate(SurveyRoom room) {
         List<SurveyEntrant> participants = room.getParticipants();
