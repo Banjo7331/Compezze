@@ -5,6 +5,7 @@ import com.cmze.response.CreateSurveyFormResponse;
 import com.cmze.response.GetSurveyFormSummaryResponse;
 import com.cmze.shared.ActionResult;
 import com.cmze.usecase.CreateSurveyFormUseCase;
+import com.cmze.usecase.DeleteSurveyFormUseCase;
 import com.cmze.usecase.GetAllSurveyFormsUseCase;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -24,11 +25,14 @@ public class SurveyFormController {
 
     private final CreateSurveyFormUseCase createSurveyFormUseCase;
     private final GetAllSurveyFormsUseCase getAllSurveyFormsUseCase;
+    private final DeleteSurveyFormUseCase deleteSurveyFormUseCase;
 
     public SurveyFormController(CreateSurveyFormUseCase createSurveyFormUseCase,
-                                GetAllSurveyFormsUseCase getAllSurveyFormsUseCase) {
+                                GetAllSurveyFormsUseCase getAllSurveyFormsUseCase,
+                                DeleteSurveyFormUseCase deleteSurveyFormUseCase) {
         this.createSurveyFormUseCase = createSurveyFormUseCase;
         this.getAllSurveyFormsUseCase = getAllSurveyFormsUseCase;
+        this.deleteSurveyFormUseCase = deleteSurveyFormUseCase;
     }
 
     @PostMapping
@@ -54,5 +58,15 @@ public class SurveyFormController {
         var result = getAllSurveyFormsUseCase.execute(currentUserId, pageable);
 
         return result.toResponseEntity(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> deleteSurveyForm(@PathVariable Long id, Authentication authentication) {
+        UUID userId = (UUID) authentication.getPrincipal();
+
+        var result = deleteSurveyFormUseCase.execute(id, userId);
+
+        return result.toResponseEntity(HttpStatus.NO_CONTENT);
     }
 }

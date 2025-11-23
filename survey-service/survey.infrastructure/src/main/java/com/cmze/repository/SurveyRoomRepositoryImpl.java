@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,5 +40,15 @@ public class SurveyRoomRepositoryImpl implements SurveyRoomRepository{
     @Override
     public Page<SurveyRoom> findAllByIsOpenTrue(Pageable pageable) {
         return impl.findAllByIsOpenTrue(pageable);
+    }
+
+    @Override
+    public List<SurveyRoom> findAllExpiredActiveRooms(LocalDateTime now) {
+        return impl.findAllExpiredActiveRooms(now);
+    }
+
+    @Override
+    public boolean existsBySurvey_IdAndIsOpenTrue(Long surveyId) {
+        return impl.existsBySurvey_IdAndIsOpenTrue(surveyId);
     }
 }

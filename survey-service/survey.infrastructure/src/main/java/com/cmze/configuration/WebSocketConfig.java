@@ -17,6 +17,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.util.StringUtils;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
@@ -78,7 +79,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                                     new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
                             accessor.setUser(authentication);
+                        } else {
+                            throw new AccessDeniedException("Invalid JWT Token");
                         }
+                    } else {
+                        throw new AccessDeniedException("Missing Authorization Header");
                     }
                 }
                 return message;

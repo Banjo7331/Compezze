@@ -32,6 +32,9 @@ public class SurveyRoom {
     @Column(name = "max_participants")
     private Integer maxParticipants;
 
+    @Column(name = "valid_until")
+    private LocalDateTime validUntil;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "survey_form_id")
     private SurveyForm survey;

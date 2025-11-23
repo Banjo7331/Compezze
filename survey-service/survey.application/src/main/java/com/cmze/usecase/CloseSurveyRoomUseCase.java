@@ -69,4 +69,23 @@ public class CloseSurveyRoomUseCase {
             ));
         }
     }
+
+    @Transactional
+    public void executeSystemClose(SurveyRoom room) {
+        logger.info("System closing expired room: {}", room.getId());
+        closeRoomInternal(room);
+    }
+
+    private ActionResult<Void> closeRoomInternal(SurveyRoom room) {
+        if (!room.isOpen()) {
+            return ActionResult.success(null);
+        }
+
+        room.setOpen(false);
+        SurveyRoom savedRoom = surveyRoomRepository.save(room);
+
+        eventPublisher.publishEvent(new RoomClosedEvent(this, savedRoom));
+
+        return ActionResult.success(null);
+    }
 }

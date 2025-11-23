@@ -1,6 +1,7 @@
 package com.cmze.usecase;
 
 import com.cmze.entity.SurveyEntrant;
+import com.cmze.entity.SurveyForm;
 import com.cmze.entity.SurveyRoom;
 import com.cmze.repository.SurveyEntrantRepository;
 import com.cmze.repository.SurveyRoomRepository;
@@ -17,6 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -24,6 +26,7 @@ import java.util.stream.Collectors;
 @UseCase
 public class JoinSurveyRoomUseCase {
     private static final Logger logger = LoggerFactory.getLogger(JoinSurveyRoomUseCase.class);
+
     private final SurveyRoomRepository surveyRoomRepository;
     private final SurveyEntrantRepository surveyEntrantRepository;
     private final SoulboundTokenService soulboundTokenService;
@@ -43,57 +46,66 @@ public class JoinSurveyRoomUseCase {
         try {
             Optional<SurveyRoom> roomOpt = surveyRoomRepository.findByIdWithSurveyAndQuestions(roomId);
             if (roomOpt.isEmpty()) {
-                logger.warn("Join failed: Room {} not found", roomId);
-                return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                        HttpStatus.NOT_FOUND, "Room not found."
-                ));
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Room not found."));
             }
             SurveyRoom room = roomOpt.get();
 
             if (!room.isOpen()) {
-                logger.warn("Join failed: Room {} is closed", roomId);
-                return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                        HttpStatus.GONE, "This room has been closed by the host."
-                ));
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.GONE, "This room has been closed by the host."));
             }
 
-            long currentSize = surveyEntrantRepository.countBySurveyRoom_Id(roomId);
-
-            if (room.getMaxParticipants() != null && currentSize >= room.getMaxParticipants()) {
-                logger.warn("Join failed: Room {} is full ({} participants)", roomId, currentSize);
-                return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                        HttpStatus.CONFLICT, "This room is full."
-                ));
-            }
-
-            if (room.isPrivate() && !isAccessAllowed(room, participantUserId, request.getInvitationToken())) {
-                logger.warn("Join failed: User {} denied access to private room {}", participantUserId, roomId);
+            String token = (request != null) ? request.getInvitationToken() : null;
+            if (room.isPrivate() && !isAccessAllowed(room, participantUserId, token)) {
                 return ActionResult.failure(ProblemDetail.forStatusAndDetail(
                         HttpStatus.FORBIDDEN,
                         "This room is private. You need a valid invitation link assigned to your account."
                 ));
             }
 
-            if (surveyEntrantRepository.existsBySurveyRoom_IdAndParticipantUserId(roomId, participantUserId)) {
-                logger.warn("Join failed: User {} already in room {}", participantUserId, roomId);
-                return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                        HttpStatus.CONFLICT, "You have already joined this room."
-                ));
+            Optional<SurveyEntrant> existingEntrantOpt = surveyEntrantRepository
+                    .findBySurveyRoom_IdAndParticipantUserId(roomId, participantUserId);
+
+            boolean isHost = room.getUserId().equals(participantUserId);
+
+            if (existingEntrantOpt.isPresent()) {
+                SurveyEntrant existingEntrant = existingEntrantOpt.get();
+
+                boolean hasSubmitted = (existingEntrant.getSurveyAttempt() != null);
+
+                JoinSurveyRoomResponse response = new JoinSurveyRoomResponse(
+                        existingEntrant.getId(),
+                        mapSurveyToDto(room.getSurvey()),
+                        hasSubmitted,
+                        isHost
+                );
+
+                return ActionResult.success(response);
+            }
+
+            long currentSize = surveyEntrantRepository.countBySurveyRoom_Id(roomId);
+            if (room.getMaxParticipants() != null && currentSize >= room.getMaxParticipants()) {
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "This room is full."));
             }
 
             SurveyEntrant newEntrant = new SurveyEntrant();
             newEntrant.setSurveyRoom(room);
             newEntrant.setUserId(participantUserId);
 
-            SurveyEntrant savedParticipant = surveyEntrantRepository.save(newEntrant);
-            logger.info("User {} joined room {} with participant id {}", participantUserId, roomId, savedParticipant.getId());
+            try {
+                SurveyEntrant savedParticipant = surveyEntrantRepository.save(newEntrant);
+                logger.info("User {} joined room {} with participant id {}", participantUserId, roomId, savedParticipant.getId());
 
-            long newSize = currentSize + 1;
-            eventPublisher.publishEvent(new EntrantJoinedEvent(this, savedParticipant, newSize));
+                long newSize = currentSize + 1;
+                eventPublisher.publishEvent(new EntrantJoinedEvent(this, savedParticipant, newSize));
+            } catch (DataIntegrityViolationException e) {
+
+            }
 
             JoinSurveyRoomResponse response = new JoinSurveyRoomResponse(
                     savedParticipant.getId(),
-                    mapSurveyToDto(room.getSurvey())
+                    mapSurveyToDto(room.getSurvey()),
+                    false,
+                    isHost
             );
 
             return ActionResult.success(response);
@@ -107,32 +119,26 @@ public class JoinSurveyRoomUseCase {
     }
 
     private boolean isAccessAllowed(SurveyRoom room, UUID participantUserId, String token) {
-        if (room.getUserId().equals(participantUserId)) {
-            return true;
-        }
+        if (room.getUserId().equals(participantUserId)) return true;
         if (token != null && !token.isBlank()) {
-            return soulboundTokenService.validateSoulboundToken(
-                    token,
-                    participantUserId,
-                    room.getId()
-            );
+            return soulboundTokenService.validateSoulboundToken(token, participantUserId, room.getId());
         }
-
         return false;
     }
 
-    private GetSurveyFormResponse mapSurveyToDto(com.cmze.entity.SurveyForm survey) {
+    private GetSurveyFormResponse mapSurveyToDto(SurveyForm survey) {
         if (survey == null) return null;
 
         return new GetSurveyFormResponse(
                 survey.getId(),
                 survey.getTitle(),
-                survey.getQuestions().stream().map(q -> new GetQuestionResponse(
-                        q.getId(),
-                        q.getTitle(),
-                        q.getType(),
-                        q.getPossibleChoices()
-                )).collect(Collectors.toList())
+                survey.getQuestions().stream()
+                        .map(q -> new GetQuestionResponse(
+                                q.getId(),
+                                q.getTitle(),
+                                q.getType(),
+                                new HashSet<>(q.getPossibleChoices())
+                        )).collect(Collectors.toList())
         );
     }
 }

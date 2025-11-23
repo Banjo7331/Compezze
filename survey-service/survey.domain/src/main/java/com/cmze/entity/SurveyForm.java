@@ -9,9 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -30,7 +28,7 @@ public class SurveyForm {
     private String title;
 
     @OneToMany(mappedBy = "surveyForm", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    private List<Question> questions = new ArrayList<>();
+    private Set<Question> questions = new HashSet<>();
 
     @Column(name = "owner_user_id", nullable = false)
     private UUID creatorId;
@@ -41,4 +39,7 @@ public class SurveyForm {
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean deleted = false;
 }

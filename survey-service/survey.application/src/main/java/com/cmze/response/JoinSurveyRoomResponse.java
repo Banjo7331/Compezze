@@ -13,6 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class JoinSurveyRoomResponse {
     private Long participantId;
-
     private GetSurveyFormResponse survey;
+    private boolean hasSubmitted;
+    private boolean isHost;
 }

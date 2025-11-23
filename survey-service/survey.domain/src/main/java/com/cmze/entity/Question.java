@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -29,10 +31,10 @@ public class Question {
     @Column(nullable = false)
     private QuestionType type;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "question_choices", joinColumns = @JoinColumn(name = "question_id"))
     @Column(name = "choice")
-    private List<String> possibleChoices = new ArrayList<>();
+    private Set<String> possibleChoices = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "survey_form_id", nullable = false)

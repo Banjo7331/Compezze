@@ -12,7 +12,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateSurveyRoomResponse {
-
     private UUID roomId;
     private UUID hostId;
     private Long surveyFormId;

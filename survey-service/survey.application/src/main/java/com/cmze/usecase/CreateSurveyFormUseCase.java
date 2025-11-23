@@ -15,9 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @UseCase
@@ -51,7 +49,7 @@ public class CreateSurveyFormUseCase {
             surveyForm.setCreatorId(ownerUserId);
             surveyForm.setPrivate(request.isPrivate());
 
-            List<Question> questions = request.getQuestions().stream()
+            Set<Question> questions = request.getQuestions().stream()
                     .map(dto -> {
                         Question q = new Question();
                         q.setTitle(dto.getTitle());
@@ -59,11 +57,11 @@ public class CreateSurveyFormUseCase {
                         q.setSurveyForm(surveyForm);
 
                         if (dto.getType() != QuestionType.OPEN_TEXT) {
-                            q.setPossibleChoices(new ArrayList<>(dto.getPossibleChoices()));
+                            q.setPossibleChoices(new HashSet<>(dto.getPossibleChoices()));
                         }
                         return q;
                     })
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toSet());
 
             surveyForm.setQuestions(questions);
 

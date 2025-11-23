@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.ProblemDetail;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,6 +27,10 @@ public class CreateSurveyRoomUseCase {
     private final SurveyFormRepository surveyFormRepository;
     private final SurveyRoomRepository surveyRoomRepository;
     private final JoinSurveyRoomUseCase joinSurveyRoomUseCase;
+
+
+    private static final int DEFAULT_DURATION_MINUTES = 15;
+    private static final int MAX_DURATION_MINUTES = 90;
 
     public CreateSurveyRoomUseCase(SurveyRoomRepository surveyRoomRepository,
                                    SurveyFormRepository surveyFormRepository,
@@ -64,6 +69,11 @@ public class CreateSurveyRoomUseCase {
             room.setSurvey(surveyForm);
             room.setUserId(creatorUserId);
             room.setMaxParticipants(request.getMaxParticipants());
+            room.setPrivate(request.isPrivate());
+
+            int requestedDuration = (request.getDurationMinutes() != null && request.getDurationMinutes() > 0)
+                    ? request.getDurationMinutes() : DEFAULT_DURATION_MINUTES;
+            room.setValidUntil(LocalDateTime.now().plusMinutes(Math.min(requestedDuration, MAX_DURATION_MINUTES)));
 
             SurveyRoom savedRoom = surveyRoomRepository.save(room);
 

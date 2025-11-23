@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -16,5 +16,5 @@ public class GetQuestionResponse {
     private Long id;
     private String title;
     private QuestionType type;
-    private List<String> possibleChoices;
+    private Set<String> possibleChoices;
 }
