@@ -2,15 +2,15 @@ package com.cmze.internal.ws;
 
 import com.cmze.entity.*;
 import com.cmze.enums.QuestionType;
+import com.cmze.repository.SurveyEntrantRepository;
+import com.cmze.repository.SurveyRoomRepository;
 import com.cmze.spi.helpers.room.FinalRoomResultDto;
 import com.cmze.spi.helpers.room.QuestionResultDto;
 import com.cmze.spi.helpers.room.SurveyResultCounter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,8 +18,21 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class SurveyResultCounterImpl implements SurveyResultCounter {
 
-    public FinalRoomResultDto calculate(SurveyRoom room) {
-        List<SurveyEntrant> participants = room.getParticipants();
+    private final SurveyRoomRepository surveyRoomRepository;
+    private final SurveyEntrantRepository surveyEntrantRepository;
+
+    public SurveyResultCounterImpl(SurveyRoomRepository surveyRoomRepository,
+                                   SurveyEntrantRepository surveyEntrantRepository) {
+        this.surveyRoomRepository = surveyRoomRepository;
+        this.surveyEntrantRepository = surveyEntrantRepository;
+    }
+
+    public FinalRoomResultDto calculate(UUID roomId) {
+
+        SurveyRoom room = surveyRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Room not found during calculation"));
+
+        List<SurveyEntrant> participants = surveyEntrantRepository.findAllBySurveyRoomId(roomId);
 
         List<SurveyAttempt> submissions = participants.stream()
                 .map(SurveyEntrant::getSurveyAttempt)
@@ -34,7 +47,7 @@ public class SurveyResultCounterImpl implements SurveyResultCounter {
             qr.setTitle(question.getTitle());
             qr.setType(question.getType());
 
-            List<ParticipantAnswer> allAnswersToThisQuestion = submissions.stream()
+            var allAnswersToThisQuestion = submissions.stream()
                     .flatMap(attempt -> attempt.getParticipantAnswers().stream())
                     .filter(answer -> answer.getQuestion().getId().equals(question.getId()))
                     .toList();
@@ -44,6 +57,7 @@ public class SurveyResultCounterImpl implements SurveyResultCounter {
                         .flatMap(pa -> pa.getAnswer().stream())
                         .collect(Collectors.toList());
                 qr.setOpenAnswers(open);
+                qr.setAnswerCounts(new HashMap<>());
             } else {
                 Map<String, Long> counts = allAnswersToThisQuestion.stream()
                         .flatMap(pa -> pa.getAnswer().stream())
@@ -52,13 +66,14 @@ public class SurveyResultCounterImpl implements SurveyResultCounter {
                                 Collectors.counting()
                         ));
                 qr.setAnswerCounts(counts);
+                qr.setOpenAnswers(new ArrayList<>());
             }
             questionResults.add(qr);
         }
 
         return new FinalRoomResultDto(
-                participants.size(),
-                submissions.size(),
+                (long) participants.size(),
+                (long) submissions.size(),
                 questionResults
         );
     }

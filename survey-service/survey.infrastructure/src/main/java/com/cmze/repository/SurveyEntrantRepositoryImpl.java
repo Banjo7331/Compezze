@@ -2,10 +2,10 @@ package com.cmze.repository;
 
 import com.cmze.entity.SurveyEntrant;
 import com.cmze.external.jpa.SurveyEntrantJpaRepository;
-import com.cmze.external.jpa.SurveyFormJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -42,5 +42,10 @@ public class SurveyEntrantRepositoryImpl implements SurveyEntrantRepository{
     @Override
     public Long countBySurveyRoom_Id(UUID roomId) {
         return impl.countBySurveyRoom_Id(roomId);
+    }
+
+    @Override
+    public List<SurveyEntrant> findAllBySurveyRoomId(UUID roomId) {
+        return impl.findAllBySurveyRoomId(roomId);
     }
 }

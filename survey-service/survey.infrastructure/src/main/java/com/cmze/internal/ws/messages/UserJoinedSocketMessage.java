@@ -11,9 +11,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UserJoinedSocketMessage {
 
+    private String event = "USER_JOINED";
     private Long participantId;
-
-    private UUID participantUserId;
-
+    private UUID userId;
     private long newParticipantCount;
+
+    public UserJoinedSocketMessage(Long participantId, UUID userId, long newParticipantCount) {
+        this.participantId = participantId;
+        this.userId = userId;
+        this.newParticipantCount = newParticipantCount;
+    }
 }

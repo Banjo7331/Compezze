@@ -1,4 +1,4 @@
-package com.cmze.dto.response;
+package com.cmze.dto.response.auth;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -4,7 +4,7 @@ import com.cmze.dto.request.ChangePasswordRequest;
 import com.cmze.dto.request.LoginRequest;
 import com.cmze.dto.request.RefreshRequest;
 import com.cmze.dto.request.RegisterRequest;
-import com.cmze.dto.response.JwtAuthResponse;
+import com.cmze.dto.response.auth.JwtAuthResponse;
 import com.cmze.entity.Role;
 import com.cmze.entity.User;
 import com.cmze.entity.enums.RoleType;
@@ -18,7 +18,6 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -158,15 +156,15 @@ public class AuthService {
 
     private ResponseCookie createRefreshTokenCookie(String token, long maxAgeSeconds) {
         return ResponseCookie.from("refreshToken", token)
-                .httpOnly(true)        // Kluczowe: JS nie ma dostępu
-                .secure(false)         // Ustaw TRUE na produkcji (wymaga HTTPS)
-                .sameSite("Strict")    // Ochrona przed CSRF
-                .path("/")             // Ustawiamy na root, aby działało przez Gateway bez problemów ze ścieżkami
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Strict")
+                .path("/")
                 .maxAge(maxAgeSeconds)
                 .build();
     }
 
     private ResponseCookie createEmptyCookie() {
-        return createRefreshTokenCookie("", 0); // Ciasteczko wygasające natychmiast
+        return createRefreshTokenCookie("", 0);
     }
 }

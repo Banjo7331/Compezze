@@ -1,7 +1,7 @@
 package com.cmze.spi.helpers.room;
 
-import com.cmze.entity.*;
+import java.util.UUID;
 
 public interface SurveyResultCounter {
-    FinalRoomResultDto calculate(SurveyRoom room);
+    FinalRoomResultDto calculate(UUID roomId);
 }

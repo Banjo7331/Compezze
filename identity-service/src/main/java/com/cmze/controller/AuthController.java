@@ -4,7 +4,7 @@ import com.cmze.dto.request.ChangePasswordRequest;
 import com.cmze.dto.request.LoginRequest;
 import com.cmze.dto.request.RefreshRequest;
 import com.cmze.dto.request.RegisterRequest;
-import com.cmze.dto.response.JwtAuthResponse;
+import com.cmze.dto.response.auth.JwtAuthResponse;
 import com.cmze.service.AuthService;
 import com.cmze.util.RefreshTokenUtil;
 import jakarta.validation.Valid;

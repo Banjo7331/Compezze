@@ -10,6 +10,7 @@ import com.cmze.ws.event.InvitationsGeneratedEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,7 @@ public class InviteUsersForSurveyRoomUseCase {
         this.eventPublisher = eventPublisher;
     }
 
+    @Transactional
     public ActionResult<GenerateRoomInvitesResponse> execute(UUID roomId, GenerateRoomInvitesRequest targetUserIds, UUID requestingHostId) {
         SurveyRoom room = surveyRoomRepository.findById(roomId).orElse(null);
         if (room == null) {

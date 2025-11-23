@@ -52,11 +52,10 @@ public class SurveyEventWebSocketNotifier {
 
     @EventListener
     public void handleSurveySubmitted(SurveyAttemptSubmittedEvent event) {
-        SurveyRoom room = event.getSurveyAttempt().getParticipant().getSurveyRoom();
-        UUID roomId = room.getId();
+        UUID roomId = event.getSurveyAttempt().getParticipant().getSurveyRoom().getId();
         String topic = "/topic/room/" + roomId;
 
-        FinalRoomResultDto liveResults = resultsCounter.calculate(room);
+        FinalRoomResultDto liveResults = resultsCounter.calculate(roomId);
 
         LiveResultUpdateSocketMessage payload = new LiveResultUpdateSocketMessage(liveResults);
 
@@ -66,11 +65,10 @@ public class SurveyEventWebSocketNotifier {
 
     @EventListener
     public void handleRoomClosed(RoomClosedEvent event) {
-        SurveyRoom room = event.getRoom();
-        UUID roomId = room.getId();
+        UUID roomId = event.getRoom().getId();
         String topic = "/topic/room/" + roomId;
 
-        FinalRoomResultDto finalResults = resultsCounter.calculate(room);
+        FinalRoomResultDto finalResults = resultsCounter.calculate(roomId);
 
         RoomClosedSocketMessage payload = new RoomClosedSocketMessage(finalResults);
 

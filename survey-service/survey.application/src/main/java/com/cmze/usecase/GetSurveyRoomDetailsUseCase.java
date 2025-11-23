@@ -17,14 +17,11 @@ import java.util.UUID;
 public class GetSurveyRoomDetailsUseCase {
 
     private final SurveyRoomRepository surveyRoomRepository;
-    private final SurveyEntrantRepository surveyEntrantRepository;
     private final SurveyResultCounter surveyResultCounter;
 
     public GetSurveyRoomDetailsUseCase(SurveyRoomRepository surveyRoomRepository,
-                                       SurveyEntrantRepository surveyEntrantRepository,
                                        SurveyResultCounter surveyResultCounter) {
         this.surveyRoomRepository = surveyRoomRepository;
-        this.surveyEntrantRepository = surveyEntrantRepository;
         this.surveyResultCounter = surveyResultCounter;
     }
 
@@ -35,9 +32,7 @@ public class GetSurveyRoomDetailsUseCase {
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Room not found"));
         }
 
-        long participants = surveyEntrantRepository.countBySurveyRoom_Id(roomId);
-
-        FinalRoomResultDto results = surveyResultCounter.calculate(room);
+        FinalRoomResultDto results = surveyResultCounter.calculate(room.getId());
 
         GetSurveyRoomDetailsResponse response = new GetSurveyRoomDetailsResponse(
                 room.getId(),
@@ -45,7 +40,7 @@ public class GetSurveyRoomDetailsUseCase {
                 room.getUserId(),
                 room.isOpen(),
                 room.isPrivate(),
-                participants,
+                results.getTotalParticipants(),
                 results
         );
 

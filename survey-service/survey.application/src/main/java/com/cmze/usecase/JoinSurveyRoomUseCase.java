@@ -15,6 +15,7 @@ import com.cmze.ws.event.EntrantJoinedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 
@@ -91,13 +92,18 @@ public class JoinSurveyRoomUseCase {
             newEntrant.setSurveyRoom(room);
             newEntrant.setUserId(participantUserId);
 
+            SurveyEntrant savedParticipant;
+
             try {
-                SurveyEntrant savedParticipant = surveyEntrantRepository.save(newEntrant);
+                savedParticipant = surveyEntrantRepository.save(newEntrant);
                 logger.info("User {} joined room {} with participant id {}", participantUserId, roomId, savedParticipant.getId());
 
                 long newSize = currentSize + 1;
                 eventPublisher.publishEvent(new EntrantJoinedEvent(this, savedParticipant, newSize));
-            } catch (DataIntegrityViolationException e) {
+            }catch (DataIntegrityViolationException e) {
+                logger.info("Race condition: User {} already in room {}. Retrieving entry.", participantUserId, roomId);
+                savedParticipant = surveyEntrantRepository.findBySurveyRoom_IdAndParticipantUserId(roomId, participantUserId)
+                        .orElseThrow(() -> new IllegalStateException("DB Error: Duplicate key but record not found."));
 
             }
 

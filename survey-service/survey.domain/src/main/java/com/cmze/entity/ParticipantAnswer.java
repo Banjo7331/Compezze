@@ -25,7 +25,7 @@ public class ParticipantAnswer {
     @JoinColumn(name = "question_id", nullable = false)
     private Question question;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "participant_answer_choices", joinColumns = @JoinColumn(name = "participant_answer_id")) // Zmieniono nazwę
     @Column(name = "answer")
     private List<String> answer = new ArrayList<>();
