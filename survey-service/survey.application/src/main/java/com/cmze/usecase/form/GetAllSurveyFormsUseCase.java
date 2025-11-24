@@ -1,9 +1,10 @@
-package com.cmze.usecase;
+package com.cmze.usecase.form;
 
 import com.cmze.entity.SurveyForm;
 import com.cmze.repository.SurveyFormRepository;
 import com.cmze.response.GetSurveyFormSummaryResponse;
 import com.cmze.shared.ActionResult;
+import com.cmze.usecase.UseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;

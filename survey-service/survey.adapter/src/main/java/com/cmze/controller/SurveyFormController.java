@@ -1,15 +1,13 @@
 package com.cmze.controller;
 
 import com.cmze.request.CreateSurveyFormRequest;
-import com.cmze.response.CreateSurveyFormResponse;
-import com.cmze.response.GetSurveyFormSummaryResponse;
-import com.cmze.shared.ActionResult;
-import com.cmze.usecase.CreateSurveyFormUseCase;
-import com.cmze.usecase.DeleteSurveyFormUseCase;
-import com.cmze.usecase.GetAllSurveyFormsUseCase;
+import com.cmze.usecase.form.CreateSurveyFormUseCase;
+import com.cmze.usecase.form.DeleteSurveyFormUseCase;
+import com.cmze.usecase.form.GetAllSurveyFormsUseCase;
+import com.cmze.usecase.form.GetMySurveyFormsUseCase;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,13 +24,16 @@ public class SurveyFormController {
     private final CreateSurveyFormUseCase createSurveyFormUseCase;
     private final GetAllSurveyFormsUseCase getAllSurveyFormsUseCase;
     private final DeleteSurveyFormUseCase deleteSurveyFormUseCase;
+    private final GetMySurveyFormsUseCase getMySurveyFormsUseCase;
 
     public SurveyFormController(CreateSurveyFormUseCase createSurveyFormUseCase,
                                 GetAllSurveyFormsUseCase getAllSurveyFormsUseCase,
-                                DeleteSurveyFormUseCase deleteSurveyFormUseCase) {
+                                DeleteSurveyFormUseCase deleteSurveyFormUseCase,
+                                GetMySurveyFormsUseCase getMySurveyFormsUseCase) {
         this.createSurveyFormUseCase = createSurveyFormUseCase;
         this.getAllSurveyFormsUseCase = getAllSurveyFormsUseCase;
         this.deleteSurveyFormUseCase = deleteSurveyFormUseCase;
+        this.getMySurveyFormsUseCase = getMySurveyFormsUseCase;
     }
 
     @PostMapping
@@ -56,6 +57,18 @@ public class SurveyFormController {
         UUID currentUserId = (UUID) authentication.getPrincipal();
 
         var result = getAllSurveyFormsUseCase.execute(currentUserId, pageable);
+
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getMyForms(Authentication authentication,
+                                        @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        UUID userId = (UUID) authentication.getPrincipal();
+
+        var result = getMySurveyFormsUseCase.execute(userId, pageable);
 
         return result.toResponseEntity(HttpStatus.OK);
     }

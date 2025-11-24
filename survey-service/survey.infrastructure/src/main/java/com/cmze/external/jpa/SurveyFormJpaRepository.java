@@ -24,4 +24,6 @@ public interface SurveyFormJpaRepository extends JpaRepository<SurveyForm, Long>
                     "   OR (sf.isPrivate = true AND sf.creatorId = :currentUserId)" +
                     ")")
     Page<SurveyForm> findAllPublicAndOwnedByUser(@Param("currentUserId") UUID currentUserId, Pageable pageable);
+
+    Page<SurveyForm> findByCreatorIdAndDeletedFalse(UUID creatorId, Pageable pageable);
 }

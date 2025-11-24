@@ -17,4 +17,5 @@ public interface SurveyRoomRepository {
     Page<SurveyRoom> findAllByIsOpenTrue(Pageable pageable);
     List<SurveyRoom> findAllExpiredActiveRooms(LocalDateTime now);
     boolean existsBySurvey_IdAndIsOpenTrue(Long surveyId);
+    Page<SurveyRoom> findByUserId(UUID userId, Pageable pageable);
 }

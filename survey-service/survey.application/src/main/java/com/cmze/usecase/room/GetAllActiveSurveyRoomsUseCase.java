@@ -1,10 +1,11 @@
-package com.cmze.usecase;
+package com.cmze.usecase.room;
 
 import com.cmze.entity.SurveyRoom;
 import com.cmze.repository.SurveyEntrantRepository;
 import com.cmze.repository.SurveyRoomRepository;
 import com.cmze.response.GetActiveSurveyRoomResponse;
 import com.cmze.shared.ActionResult;
+import com.cmze.usecase.UseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;

@@ -2,7 +2,7 @@ package com.cmze.internal.scheduler;
 
 import com.cmze.entity.SurveyRoom;
 import com.cmze.repository.SurveyRoomRepository;
-import com.cmze.usecase.CloseSurveyRoomUseCase;
+import com.cmze.usecase.room.CloseSurveyRoomUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;

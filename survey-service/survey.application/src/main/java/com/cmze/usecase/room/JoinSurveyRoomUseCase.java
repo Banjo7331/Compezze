@@ -1,4 +1,4 @@
-package com.cmze.usecase;
+package com.cmze.usecase.room;
 
 import com.cmze.entity.SurveyEntrant;
 import com.cmze.entity.SurveyForm;
@@ -11,6 +11,7 @@ import com.cmze.response.GetSurveyResponse.GetSurveyFormResponse;
 import com.cmze.response.JoinSurveyRoomResponse;
 import com.cmze.shared.ActionResult;
 import com.cmze.spi.helpers.invites.SoulboundTokenService;
+import com.cmze.usecase.UseCase;
 import com.cmze.ws.event.EntrantJoinedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

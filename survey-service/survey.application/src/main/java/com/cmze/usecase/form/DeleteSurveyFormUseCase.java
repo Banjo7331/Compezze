@@ -1,9 +1,10 @@
-package com.cmze.usecase;
+package com.cmze.usecase.form;
 
 import com.cmze.entity.SurveyForm;
 import com.cmze.repository.SurveyFormRepository;
 import com.cmze.repository.SurveyRoomRepository;
 import com.cmze.shared.ActionResult;
+import com.cmze.usecase.UseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.transaction.annotation.Transactional;

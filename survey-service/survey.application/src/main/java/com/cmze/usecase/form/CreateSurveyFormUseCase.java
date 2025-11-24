@@ -1,4 +1,4 @@
-package com.cmze.usecase;
+package com.cmze.usecase.form;
 
 import com.cmze.entity.Question;
 import com.cmze.entity.SurveyForm;
@@ -8,6 +8,7 @@ import com.cmze.request.CreateQuestionRequest;
 import com.cmze.request.CreateSurveyFormRequest;
 import com.cmze.response.CreateSurveyFormResponse;
 import com.cmze.shared.ActionResult;
+import com.cmze.usecase.UseCase;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

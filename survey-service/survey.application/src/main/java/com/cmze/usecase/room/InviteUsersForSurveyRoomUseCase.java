@@ -1,4 +1,4 @@
-package com.cmze.usecase;
+package com.cmze.usecase.room;
 
 import com.cmze.entity.SurveyRoom;
 import com.cmze.repository.SurveyRoomRepository;
@@ -6,6 +6,7 @@ import com.cmze.request.GenerateRoomInvitesRequest;
 import com.cmze.response.GenerateRoomInvitesResponse;
 import com.cmze.shared.ActionResult;
 import com.cmze.spi.helpers.invites.SoulboundTokenService;
+import com.cmze.usecase.UseCase;
 import com.cmze.ws.event.InvitationsGeneratedEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;

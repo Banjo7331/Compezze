@@ -1,12 +1,12 @@
-package com.cmze.usecase;
+package com.cmze.usecase.room;
 
 import com.cmze.entity.SurveyRoom;
-import com.cmze.repository.SurveyEntrantRepository;
 import com.cmze.repository.SurveyRoomRepository;
 import com.cmze.response.GetSurveyRoomDetailsResponse;
 import com.cmze.shared.ActionResult;
 import com.cmze.spi.helpers.room.FinalRoomResultDto;
 import com.cmze.spi.helpers.room.SurveyResultCounter;
+import com.cmze.usecase.UseCase;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,8 +1,9 @@
-package com.cmze.usecase;
+package com.cmze.usecase.room;
 
 import com.cmze.entity.SurveyRoom;
 import com.cmze.repository.SurveyRoomRepository;
 import com.cmze.shared.ActionResult;
+import com.cmze.usecase.UseCase;
 import com.cmze.ws.event.RoomClosedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

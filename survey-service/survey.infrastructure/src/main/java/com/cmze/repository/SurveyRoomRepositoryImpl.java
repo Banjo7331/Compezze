@@ -51,4 +51,9 @@ public class SurveyRoomRepositoryImpl implements SurveyRoomRepository{
     public boolean existsBySurvey_IdAndIsOpenTrue(Long surveyId) {
         return impl.existsBySurvey_IdAndIsOpenTrue(surveyId);
     }
+
+    @Override
+    public Page<SurveyRoom> findByUserId(UUID userId, Pageable pageable) {
+        return impl.findByUserId(userId, pageable);
+    }
 }

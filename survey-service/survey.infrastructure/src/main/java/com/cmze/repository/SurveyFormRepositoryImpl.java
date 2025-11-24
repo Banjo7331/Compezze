@@ -37,6 +37,11 @@ public class SurveyFormRepositoryImpl implements SurveyFormRepository {
     }
 
     @Override
+    public Page<SurveyForm> findByCreatorIdAndDeletedFalse(UUID creatorId, Pageable pageable) {
+        return impl.findByCreatorIdAndDeletedFalse(creatorId, pageable);
+    }
+
+    @Override
     public SurveyForm save(SurveyForm survey) {
         return impl.save(survey);
     }

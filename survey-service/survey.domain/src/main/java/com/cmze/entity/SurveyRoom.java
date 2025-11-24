@@ -1,6 +1,7 @@
 package com.cmze.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +31,7 @@ public class SurveyRoom {
     private List<SurveyEntrant> participants = new ArrayList<>();
 
     @Column(name = "max_participants")
+    @Size(min = 1, max = 1000)
     private Integer maxParticipants;
 
     @Column(name = "valid_until")

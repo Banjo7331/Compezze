@@ -1,5 +1,6 @@
 package com.cmze.response;
 
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,5 +16,7 @@ public class CreateSurveyRoomResponse {
     private UUID roomId;
     private UUID hostId;
     private Long surveyFormId;
+
+    @Size(min = 1, max = 1000)
     private Integer maxParticipants;
 }

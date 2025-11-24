@@ -1,4 +1,4 @@
-package com.cmze.usecase;
+package com.cmze.usecase.room;
 
 import com.cmze.entity.ParticipantAnswer;
 import com.cmze.entity.Question;
@@ -9,6 +9,7 @@ import com.cmze.repository.SurveyEntrantRepository;
 import com.cmze.request.SubmitSurveyAttemptRequest.SubmitParticipantAnswerRequest;
 import com.cmze.request.SubmitSurveyAttemptRequest.SubmitSurveyAttemptRequest;
 import com.cmze.shared.ActionResult;
+import com.cmze.usecase.UseCase;
 import com.cmze.ws.event.SurveyAttemptSubmittedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

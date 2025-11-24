@@ -11,5 +11,6 @@ public interface SurveyFormRepository {
     Optional<SurveyForm> findById(Long Id);
     Page<SurveyForm> findAll(Pageable pageable);
     Page<SurveyForm> findAllPublicAndOwnedByUser(UUID currentUserId, Pageable pageable);
+    Page<SurveyForm> findByCreatorIdAndDeletedFalse(UUID creatorId, Pageable pageable);
     SurveyForm save(SurveyForm surveyForm);
 }

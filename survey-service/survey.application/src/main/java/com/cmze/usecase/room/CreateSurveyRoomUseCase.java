@@ -1,4 +1,4 @@
-package com.cmze.usecase;
+package com.cmze.usecase.room;
 
 import com.cmze.entity.SurveyForm;
 import com.cmze.entity.SurveyRoom;
@@ -9,6 +9,7 @@ import com.cmze.request.JoinSurveyRoomRequest;
 import com.cmze.response.CreateSurveyRoomResponse;
 import com.cmze.response.JoinSurveyRoomResponse;
 import com.cmze.shared.ActionResult;
+import com.cmze.usecase.UseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;

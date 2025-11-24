@@ -30,4 +30,8 @@ public interface SurveyRoomJpaRepository extends JpaRepository<SurveyRoom, UUID>
 
     @Query("SELECT r FROM SurveyRoom r WHERE r.isOpen = true AND r.validUntil < :now")
     List<SurveyRoom> findAllExpiredActiveRooms(@Param("now") LocalDateTime now);
+
+    @Query("SELECT r FROM SurveyRoom r LEFT JOIN FETCH r.survey WHERE r.userId = :userId")
+    Page<SurveyRoom> findByUserId(@Param("userId") UUID userId, Pageable pageable);
+
 }

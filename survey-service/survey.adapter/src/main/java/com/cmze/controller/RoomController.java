@@ -4,9 +4,9 @@ import com.cmze.request.CreateSurveyRoomRequest;
 import com.cmze.request.GenerateRoomInvitesRequest;
 import com.cmze.request.JoinSurveyRoomRequest;
 import com.cmze.request.SubmitSurveyAttemptRequest.SubmitSurveyAttemptRequest;
-import com.cmze.shared.ActionResult;
-import com.cmze.usecase.*;
+import com.cmze.usecase.room.*;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +28,7 @@ public class RoomController {
     private final GetAllActiveSurveyRoomsUseCase getAllActiveSurveyRoomsUseCase;
     private final InviteUsersForSurveyRoomUseCase inviteUsersForSurveyRoomUseCase;
     private final GetSurveyRoomDetailsUseCase getSurveyRoomDetailsUseCase;
+    private final GetMySurveyRoomsResultsUseCase getMySurveyRoomsResultsUseCase;
 
     public RoomController(CreateSurveyRoomUseCase createSurveyRoomUseCase,
                           JoinSurveyRoomUseCase joinSurveyRoomUseCase,
@@ -35,7 +36,8 @@ public class RoomController {
                           CloseSurveyRoomUseCase closeSurveyRoomUseCase,
                           GetAllActiveSurveyRoomsUseCase getAllActiveSurveyRoomsUseCase,
                           InviteUsersForSurveyRoomUseCase inviteUsersForSurveyRoomUseCase,
-                          GetSurveyRoomDetailsUseCase getSurveyRoomDetailsUseCase) {
+                          GetSurveyRoomDetailsUseCase getSurveyRoomDetailsUseCase,
+                          GetMySurveyRoomsResultsUseCase getMySurveyRoomsResultsUseCase) {
         this.createSurveyRoomUseCase = createSurveyRoomUseCase;
         this.joinSurveyRoomUseCase = joinSurveyRoomUseCase;
         this.submitSurveyAttemptUseCase = submitSurveyAttemptUseCase;
@@ -43,6 +45,7 @@ public class RoomController {
         this.getAllActiveSurveyRoomsUseCase = getAllActiveSurveyRoomsUseCase;
         this.inviteUsersForSurveyRoomUseCase = inviteUsersForSurveyRoomUseCase;
         this.getSurveyRoomDetailsUseCase = getSurveyRoomDetailsUseCase;
+        this.getMySurveyRoomsResultsUseCase = getMySurveyRoomsResultsUseCase;
     }
 
     @PostMapping
@@ -69,6 +72,19 @@ public class RoomController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getActiveRooms(@PageableDefault(size = 20) Pageable pageable) {
         var result = getAllActiveSurveyRoomsUseCase.execute(pageable);
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getMyRooms(
+            Authentication authentication,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        UUID userId = (UUID) authentication.getPrincipal();
+
+        var result = getMySurveyRoomsResultsUseCase.execute(userId, pageable);
+
         return result.toResponseEntity(HttpStatus.OK);
     }
 
