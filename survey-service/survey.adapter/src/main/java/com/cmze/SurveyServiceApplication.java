@@ -11,9 +11,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableJpaAuditing
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = {
-        "com.cmze.external.identity"
-})
 public class SurveyServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(SurveyServiceApplication.class,args);

@@ -2,6 +2,8 @@ package com.cmze.repository;
 
 import com.cmze.entity.QuizRoom;
 import com.cmze.external.jpa.QuizRoomJpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -39,7 +41,22 @@ public class QuizRoomRepositoryImpl implements QuizRoomRepository {
     }
 
     @Override
-    public List<QuizRoom> findRoomsWithExpiredQuestion(LocalDateTime now) {
-        return impl.findRoomsWithExpiredQuestion(now);
+    public List<QuizRoom> findRoomsWithExpiredTimer(LocalDateTime now) {
+        return impl.findRoomsWithExpiredTimer(now);
+    }
+
+    @Override
+    public List<QuizRoom> findAllExpiredActiveRooms(LocalDateTime now) {
+        return impl.findAllExpiredActiveRooms(now);
+    }
+
+    @Override
+    public Page<QuizRoom> findAllPublicActiveRooms(Pageable pageable) {
+        return impl.findAllPublicActiveRooms(pageable);
+    }
+
+    @Override
+    public Page<QuizRoom> findByHostId(UUID hostId, Pageable pageable) {
+        return impl.findByHostId(hostId, pageable);
     }
 }

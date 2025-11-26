@@ -1,10 +1,14 @@
 package com.cmze.controller;
 
 import com.cmze.request.CreateQuizRoomRequest;
+import com.cmze.request.GenerateRoomInvitesRequest;
 import com.cmze.request.JoinQuizRoomRequest;
 import com.cmze.request.SubmitQuizAnswerRequest;
 import com.cmze.usecase.room.*;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,18 +25,33 @@ public class RoomController {
     private final JoinQuizRoomUseCase joinQuizRoomUseCase;
     private final StartQuizUseCase startQuizUseCase;
     private final SubmitQuizAnswerUseCase submitQuizAnswerUseCase;
+    private final NextQuestionUseCase nextQuestionUseCase;
     private final FinishCurrentQuestionUseCase finishCurrentQuestionUseCase;
+    private final InviteUsersForQuizRoomUseCase inviteUsersForQuizRoomUseCase;
+    private final GetQuizRoomDetailsUseCase getQuizRoomDetailsUseCase;
+    private final GetMyQuizRoomsResultsUseCase getMyQuizRoomsResultsUseCase;
+    private final GetAllActiveQuizRoomsUseCase getAllActiveQuizRoomsUseCase;
 
     public RoomController(final CreateQuizRoomUseCase createQuizRoomUseCase,
                           final JoinQuizRoomUseCase joinQuizRoomUseCase,
                           final StartQuizUseCase startQuizUseCase,
                           final SubmitQuizAnswerUseCase submitQuizAnswerUseCase,
-                          final FinishCurrentQuestionUseCase finishCurrentQuestionUseCase) {
+                          final NextQuestionUseCase nextQuestionUseCase,
+                          final FinishCurrentQuestionUseCase finishCurrentQuestionUseCase,
+                          final InviteUsersForQuizRoomUseCase inviteUsersForQuizRoomUseCase,
+                          final GetQuizRoomDetailsUseCase getQuizRoomDetailsUseCase,
+                          final GetMyQuizRoomsResultsUseCase getMyQuizRoomsResultsUseCase,
+                          final GetAllActiveQuizRoomsUseCase getAllActiveQuizRoomsUseCase) {
         this.createQuizRoomUseCase = createQuizRoomUseCase;
         this.joinQuizRoomUseCase = joinQuizRoomUseCase;
         this.startQuizUseCase = startQuizUseCase;
         this.submitQuizAnswerUseCase = submitQuizAnswerUseCase;
+        this.nextQuestionUseCase = nextQuestionUseCase;
         this.finishCurrentQuestionUseCase = finishCurrentQuestionUseCase;
+        this.inviteUsersForQuizRoomUseCase = inviteUsersForQuizRoomUseCase;
+        this.getQuizRoomDetailsUseCase = getQuizRoomDetailsUseCase;
+        this.getMyQuizRoomsResultsUseCase = getMyQuizRoomsResultsUseCase;
+        this.getAllActiveQuizRoomsUseCase = getAllActiveQuizRoomsUseCase;
     }
 
     @PostMapping
@@ -86,6 +105,18 @@ public class RoomController {
         return result.toResponseEntity(HttpStatus.OK);
     }
 
+    @PostMapping("/{roomId}/question/next")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> nextQuestion(
+            @PathVariable final UUID roomId,
+            final Authentication authentication
+    ) {
+        final var hostId = (UUID) authentication.getPrincipal();
+        final var result = nextQuestionUseCase.execute(roomId, hostId);
+
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
     @PostMapping("/{roomId}/question/finish")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> finishQuestionManually(
@@ -111,5 +142,32 @@ public class RoomController {
         final var result = inviteUsersForQuizRoomUseCase.execute(roomId, request, hostId);
 
         return result.toResponseEntity(HttpStatus.CREATED);
+    }
+
+    @GetMapping("/{roomId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getRoomDetails(@PathVariable final UUID roomId) {
+        final var result = getQuizRoomDetailsUseCase.execute(roomId);
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getMyRooms(
+            final Authentication authentication,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) final Pageable pageable
+    ) {
+        final var userId = (UUID) authentication.getPrincipal();
+        final var result = getMyQuizRoomsResultsUseCase.execute(userId, pageable);
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
+    @GetMapping("/active")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getActiveRooms(
+            @PageableDefault(size = 20) final Pageable pageable
+    ) {
+        final var result = getAllActiveQuizRoomsUseCase.execute(pageable);
+        return result.toResponseEntity(HttpStatus.OK);
     }
 }

@@ -1,6 +1,8 @@
 package com.cmze.repository;
 
 import com.cmze.entity.QuizRoom;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,5 +14,8 @@ public interface QuizRoomRepository {
     Optional<QuizRoom> findByIdWithQuiz(UUID id);
     QuizRoom save(QuizRoom quizRoom);
     Optional<QuizRoom> findByIdWithFullQuizStructure(UUID id);
-    List<QuizRoom> findRoomsWithExpiredQuestion(LocalDateTime now);
+    List<QuizRoom> findRoomsWithExpiredTimer(LocalDateTime now);
+    List<QuizRoom> findAllExpiredActiveRooms(LocalDateTime now);
+    Page<QuizRoom> findAllPublicActiveRooms(Pageable pageable);
+    Page<QuizRoom> findByHostId(UUID hostId, Pageable pageable);
 }

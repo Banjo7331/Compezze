@@ -15,12 +15,15 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @UseCase
 public class FinishCurrentQuestionUseCase {
 
     private static final Logger logger = LoggerFactory.getLogger(FinishCurrentQuestionUseCase.class);
+
+    private static final int INTERMISSION_SECONDS = 10;
 
     private final QuizRoomRepository quizRoomRepository;
     private final ApplicationEventPublisher eventPublisher;
@@ -46,7 +49,7 @@ public class FinishCurrentQuestionUseCase {
             }
 
             if (room.getStatus() != QuizRoomStatus.QUESTION_ACTIVE) {
-                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "No active question to finish"));
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Question is not active"));
             }
 
             finishQuestionInternal(room);
@@ -64,8 +67,9 @@ public class FinishCurrentQuestionUseCase {
         try {
             final var freshRoom = quizRoomRepository.findByIdWithFullQuizStructure(room.getId()).orElseThrow();
 
-            finishQuestionInternal(freshRoom);
-
+            if (freshRoom.getStatus() == QuizRoomStatus.QUESTION_ACTIVE) {
+                finishQuestionInternal(freshRoom);
+            }
         } catch (Exception e) {
             logger.error("System failed to finish question for room {}", room.getId(), e);
         }
@@ -75,7 +79,8 @@ public class FinishCurrentQuestionUseCase {
         logger.info("Finishing question index {} for room {}", room.getCurrentQuestionIndex(), room.getId());
 
         room.setStatus(QuizRoomStatus.QUESTION_FINISHED);
-        room.setCurrentQuestionEndTime(null);
+
+        room.setCurrentQuestionEndTime(LocalDateTime.now().plusSeconds(INTERMISSION_SECONDS));
 
         quizRoomRepository.save(room);
 
