@@ -51,39 +51,44 @@ public class RoomController {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> createRoom(
-            @RequestBody @Valid CreateSurveyRoomRequest request,
-            Authentication authentication) {
+            @RequestBody @Valid final CreateSurveyRoomRequest request,
+            final Authentication authentication
+    ) {
+        final var creatorUserId = (UUID) authentication.getPrincipal();
 
-        UUID creatorUserId = (UUID) authentication.getPrincipal();
-
-        var result = createSurveyRoomUseCase.execute(request, creatorUserId);
+        final var result = createSurveyRoomUseCase.execute(request, creatorUserId);
 
         return result.toResponseEntity(HttpStatus.CREATED);
     }
 
     @GetMapping("/{roomId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getRoomDetails(@PathVariable UUID roomId) {
-        var result = getSurveyRoomDetailsUseCase.execute(roomId);
+    public ResponseEntity<?> getRoomDetails(@PathVariable final UUID roomId) {
+
+        final var result = getSurveyRoomDetailsUseCase.execute(roomId);
+
         return result.toResponseEntity(HttpStatus.OK);
     }
 
     @GetMapping("/active")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getActiveRooms(@PageableDefault(size = 20) Pageable pageable) {
-        var result = getAllActiveSurveyRoomsUseCase.execute(pageable);
+    public ResponseEntity<?> getActiveRooms(
+            @PageableDefault(size = 20) final Pageable pageable
+    ) {
+        final var result = getAllActiveSurveyRoomsUseCase.execute(pageable);
+
         return result.toResponseEntity(HttpStatus.OK);
     }
 
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getMyRooms(
-            Authentication authentication,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            final Authentication authentication,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) final Pageable pageable
     ) {
-        UUID userId = (UUID) authentication.getPrincipal();
+        final var userId = (UUID) authentication.getPrincipal();
 
-        var result = getMySurveyRoomsResultsUseCase.execute(userId, pageable);
+        final var result = getMySurveyRoomsResultsUseCase.execute(userId, pageable);
 
         return result.toResponseEntity(HttpStatus.OK);
     }
@@ -91,13 +96,13 @@ public class RoomController {
     @PostMapping("/{roomId}/join")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> joinRoom(
-            @PathVariable UUID roomId,
-            @RequestBody(required = false) JoinSurveyRoomRequest request,
-            Authentication authentication
+            @PathVariable final UUID roomId,
+            @RequestBody(required = false) final JoinSurveyRoomRequest request,
+            final Authentication authentication
     ) {
-        UUID participantUserId = (UUID) authentication.getPrincipal();
+        final var participantUserId = (UUID) authentication.getPrincipal();
 
-        var result = joinSurveyRoomUseCase.execute(roomId, participantUserId, request);
+        final var result = joinSurveyRoomUseCase.execute(roomId, participantUserId, request);
 
         return result.toResponseEntity(HttpStatus.OK);
     }
@@ -105,12 +110,13 @@ public class RoomController {
     @PostMapping("/{roomId}/submit")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> submitAnswers(
-            @PathVariable UUID roomId,
-            @RequestBody @Valid SubmitSurveyAttemptRequest request,
-            Authentication authentication
+            @PathVariable final UUID roomId,
+            @RequestBody @Valid final SubmitSurveyAttemptRequest request,
+            final Authentication authentication
     ) {
-        UUID participantUserId = (UUID) authentication.getPrincipal();
-        var result = submitSurveyAttemptUseCase.execute(roomId, participantUserId, request);
+        final var participantUserId = (UUID) authentication.getPrincipal();
+
+        final var result = submitSurveyAttemptUseCase.execute(roomId, participantUserId, request);
 
         return result.toResponseEntity(HttpStatus.CREATED);
     }
@@ -118,11 +124,12 @@ public class RoomController {
     @PostMapping("/{roomId}/close")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> closeRoom(
-                                        @PathVariable UUID roomId,
-                                        Authentication authentication
+            @PathVariable final UUID roomId,
+            final Authentication authentication
     ) {
-        UUID hostUserId = (UUID) authentication.getPrincipal();
-        var result = closeSurveyRoomUseCase.execute(roomId, hostUserId);
+        final var hostUserId = (UUID) authentication.getPrincipal();
+
+        final var result = closeSurveyRoomUseCase.execute(roomId, hostUserId);
 
         return result.toResponseEntity(HttpStatus.OK);
     }
@@ -130,13 +137,13 @@ public class RoomController {
     @PostMapping("/{roomId}/invites")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> generateInvites(
-            @PathVariable UUID roomId,
-            @RequestBody GenerateRoomInvitesRequest targetUserIds,
-            Authentication authentication
+            @PathVariable final UUID roomId,
+            @RequestBody final GenerateRoomInvitesRequest request,
+            final Authentication authentication
     ) {
-        UUID hostId = (UUID) authentication.getPrincipal();
+        final var hostId = (UUID) authentication.getPrincipal();
 
-        var result = inviteUsersForSurveyRoomUseCase.execute(roomId, targetUserIds, hostId);
+        final var result = inviteUsersForSurveyRoomUseCase.execute(roomId, request, hostId);
 
         return result.toResponseEntity(HttpStatus.CREATED);
     }

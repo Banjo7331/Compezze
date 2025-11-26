@@ -17,24 +17,26 @@ import java.util.UUID;
 
 @UseCase
 public class GetAllSurveyFormsUseCase {
+
     private static final Logger logger = LoggerFactory.getLogger(GetAllSurveyFormsUseCase.class);
     private final SurveyFormRepository surveyFormRepository;
 
-    public GetAllSurveyFormsUseCase(SurveyFormRepository surveyFormRepository) {
+    public GetAllSurveyFormsUseCase(final SurveyFormRepository surveyFormRepository) {
         this.surveyFormRepository = surveyFormRepository;
     }
 
-    @Transactional
-    public ActionResult<Page<GetSurveyFormSummaryResponse>> execute(UUID currentUserId, Pageable pageable) {
+    @Transactional(readOnly = true)
+    public ActionResult<Page<GetSurveyFormSummaryResponse>> execute(final UUID currentUserId, final Pageable pageable) {
         try {
-            Page<SurveyForm> formsPage = surveyFormRepository.findAllPublicAndOwnedByUser(currentUserId, pageable);
+            final var formsPage = surveyFormRepository.findAllPublicAndOwnedByUser(currentUserId, pageable);
 
-            Page<GetSurveyFormSummaryResponse> dtoPage = formsPage.map(this::mapToDto);
+            final var dtoPage = formsPage.map(this::mapToDto);
 
             return ActionResult.success(dtoPage);
 
         } catch (Exception e) {
             logger.error("Failed to get survey forms for user {}: {}", currentUserId, e.getMessage(), e);
+
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "An unexpected error occurred while fetching surveys."
@@ -42,7 +44,7 @@ public class GetAllSurveyFormsUseCase {
         }
     }
 
-    private GetSurveyFormSummaryResponse mapToDto(SurveyForm form) {
+    private GetSurveyFormSummaryResponse mapToDto(final SurveyForm form) {
         return new GetSurveyFormSummaryResponse(
                 form.getId(),
                 form.getTitle(),

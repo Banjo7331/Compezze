@@ -12,7 +12,6 @@
     <artifactId>survey.infrastructure</artifactId>
 
     <dependencies>
-        <!-- Depends on inner layers -->
         <dependency>
             <groupId>com.cmze</groupId>
             <artifactId>survey.domain</artifactId>

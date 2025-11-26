@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -23,43 +24,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenReader jwtTokenReader;
 
-    public JwtAuthenticationFilter(JwtTokenReader jwtTokenReader) {
+    public JwtAuthenticationFilter(final JwtTokenReader jwtTokenReader) {
         this.jwtTokenReader = jwtTokenReader;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(final HttpServletRequest request,
+                                    final HttpServletResponse response,
+                                    final FilterChain filterChain) throws ServletException, IOException {
 
-        String token = getTokenFromRequest(request);
+        final var token = getTokenFromRequest(request);
 
-        if(StringUtils.hasText(token) && jwtTokenReader.validateToken(token)) {
+        if (StringUtils.hasText(token) && jwtTokenReader.validateToken(token)) {
 
-            UUID userId = jwtTokenReader.getUserId(token);
-//            String username = jwtTokenReader.getUsername(token);
-            List<String> roles = jwtTokenReader.getRoles(token);
+            final var userId = jwtTokenReader.getUserId(token);
+            final var roles = jwtTokenReader.getRoles(token);
 
-            List<GrantedAuthority> authorities = roles.stream()
+            final var authorities = roles.stream()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
 
-            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+            final var authentication = new UsernamePasswordAuthenticationToken(
                     userId,
                     null,
                     authorities
             );
 
-            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String getTokenFromRequest(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
+    private String getTokenFromRequest(final HttpServletRequest request) {
+        final var bearerToken = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if(StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
         return null;

@@ -7,6 +7,7 @@ import com.cmze.repository.SurveyRoomRepository;
 import com.cmze.spi.helpers.room.FinalRoomResultDto;
 import com.cmze.spi.helpers.room.QuestionResultDto;
 import com.cmze.spi.helpers.room.SurveyResultCounter;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,60 +22,69 @@ public class SurveyResultCounterImpl implements SurveyResultCounter {
     private final SurveyRoomRepository surveyRoomRepository;
     private final SurveyEntrantRepository surveyEntrantRepository;
 
-    public SurveyResultCounterImpl(SurveyRoomRepository surveyRoomRepository,
-                                   SurveyEntrantRepository surveyEntrantRepository) {
+    public SurveyResultCounterImpl(final SurveyRoomRepository surveyRoomRepository,
+                                   final SurveyEntrantRepository surveyEntrantRepository) {
         this.surveyRoomRepository = surveyRoomRepository;
         this.surveyEntrantRepository = surveyEntrantRepository;
     }
 
-    public FinalRoomResultDto calculate(UUID roomId) {
+    @Override
+    public FinalRoomResultDto calculate(final UUID roomId) {
+        final var room = surveyRoomRepository.findByIdWithSurveyAndQuestions(roomId)
+                .orElseThrow(() -> new EntityNotFoundException("SurveyRoom not found with id: " + roomId));
 
-        SurveyRoom room = surveyRoomRepository.findById(roomId)
-                .orElseThrow(() -> new RuntimeException("Room not found during calculation"));
+        final var participants = surveyEntrantRepository.findAllBySurveyRoomId(roomId);
 
-        List<SurveyEntrant> participants = surveyEntrantRepository.findAllBySurveyRoomId(roomId);
-
-        List<SurveyAttempt> submissions = participants.stream()
+        final var submissions = participants.stream()
                 .map(SurveyEntrant::getSurveyAttempt)
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .toList();
 
-        List<QuestionResultDto> questionResults = new ArrayList<>();
 
-        for (Question question : room.getSurvey().getQuestions()) {
-            QuestionResultDto qr = new QuestionResultDto();
-            qr.setQuestionId(question.getId());
-            qr.setTitle(question.getTitle());
-            qr.setType(question.getType());
+        final Map<Long, List<ParticipantAnswer>> answersByQuestionId = submissions.stream()
+                .flatMap(submission -> submission.getParticipantAnswers().stream())
+                .collect(Collectors.groupingBy(
+                        answer -> answer.getQuestion().getId()
+                ));
 
-            var allAnswersToThisQuestion = submissions.stream()
-                    .flatMap(attempt -> attempt.getParticipantAnswers().stream())
-                    .filter(answer -> answer.getQuestion().getId().equals(question.getId()))
-                    .toList();
-
-            if (question.getType() == QuestionType.OPEN_TEXT) {
-                List<String> open = allAnswersToThisQuestion.stream()
-                        .flatMap(pa -> pa.getAnswer().stream())
-                        .collect(Collectors.toList());
-                qr.setOpenAnswers(open);
-                qr.setAnswerCounts(new HashMap<>());
-            } else {
-                Map<String, Long> counts = allAnswersToThisQuestion.stream()
-                        .flatMap(pa -> pa.getAnswer().stream())
-                        .collect(Collectors.groupingBy(
-                                Function.identity(),
-                                Collectors.counting()
-                        ));
-                qr.setAnswerCounts(counts);
-                qr.setOpenAnswers(new ArrayList<>());
-            }
-            questionResults.add(qr);
-        }
+        final var questionResults = room.getSurvey().getQuestions().stream()
+                .map(question -> {
+                    final var answers = answersByQuestionId.getOrDefault(question.getId(), List.of());
+                    return mapToQuestionResultDto(question, answers);
+                })
+                .collect(Collectors.toList());
 
         return new FinalRoomResultDto(
                 (long) participants.size(),
                 (long) submissions.size(),
                 questionResults
         );
+    }
+
+    private QuestionResultDto mapToQuestionResultDto(final Question question, final List<ParticipantAnswer> answers) {
+        final var dto = new QuestionResultDto();
+        dto.setQuestionId(question.getId());
+        dto.setTitle(question.getTitle());
+        dto.setType(question.getType());
+
+        final var allSelectedValues = answers.stream()
+                .flatMap(pa -> pa.getAnswer().stream())
+                .toList();
+
+        if (question.getType() == QuestionType.OPEN_TEXT) {
+            dto.setOpenAnswers(allSelectedValues);
+            dto.setAnswerCounts(new HashMap<>());
+        } else {
+            final var counts = allSelectedValues.stream()
+                    .collect(Collectors.groupingBy(
+                            Function.identity(),
+                            Collectors.counting()
+                    ));
+
+            dto.setAnswerCounts(counts);
+            dto.setOpenAnswers(new ArrayList<>());
+        }
+
+        return dto;
     }
 }

@@ -1,5 +1,6 @@
 package com.cmze.request;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -11,6 +12,7 @@ public class CreateSurveyRoomRequest {
     private Long surveyFormId;
 
     @Min(value = 1, message = "Max participants must be at least 1")
+    @Max(value = 1000, message = "Maximum 1000 participants")
     private Integer maxParticipants;
 
     private boolean isPrivate;

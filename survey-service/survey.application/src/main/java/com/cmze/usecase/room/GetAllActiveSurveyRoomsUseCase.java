@@ -18,40 +18,45 @@ import org.springframework.transaction.annotation.Transactional;
 public class GetAllActiveSurveyRoomsUseCase {
 
     private static final Logger logger = LoggerFactory.getLogger(GetAllActiveSurveyRoomsUseCase.class);
+
     private final SurveyRoomRepository surveyRoomRepository;
     private final SurveyEntrantRepository entrantRepository;
 
-    public GetAllActiveSurveyRoomsUseCase( SurveyRoomRepository surveyRoomRepository,
-                                           SurveyEntrantRepository entrantRepository) {
+    public GetAllActiveSurveyRoomsUseCase(final SurveyRoomRepository surveyRoomRepository,
+                                          final SurveyEntrantRepository entrantRepository) {
         this.surveyRoomRepository = surveyRoomRepository;
         this.entrantRepository = entrantRepository;
     }
 
     @Transactional(readOnly = true)
-    public ActionResult<Page<GetActiveSurveyRoomResponse>> execute(Pageable pageable) {
+    public ActionResult<Page<GetActiveSurveyRoomResponse>> execute(final Pageable pageable) {
         try {
-            Page<SurveyRoom> activeRooms = surveyRoomRepository.findAllByIsOpenTrue(pageable);
+            final var activeRooms = surveyRoomRepository.findAllByIsOpenTrue(pageable);
 
-            Page<GetActiveSurveyRoomResponse> responsePage = activeRooms.map(room -> {
-                long participantsCount = entrantRepository.countBySurveyRoom_Id(room.getId());
-
-                String surveyTitle = room.getSurvey().getTitle();
-
-                return new GetActiveSurveyRoomResponse(
-                        room.getId(),
-                        surveyTitle,
-                        room.getUserId(),
-                        participantsCount,
-                        room.getMaxParticipants()
-                );
-            });
+            final var responsePage = activeRooms.map(this::mapToDto);
 
             return ActionResult.success(responsePage);
+
         } catch (Exception e) {
             logger.error("Failed to fetch active rooms: {}", e.getMessage(), e);
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching active rooms"
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error fetching active rooms"
             ));
         }
+    }
+
+    private GetActiveSurveyRoomResponse mapToDto(final SurveyRoom room) {
+        final long participantsCount = entrantRepository.countBySurveyRoom_Id(room.getId());
+
+        final String surveyTitle = room.getSurvey().getTitle();
+
+        return new GetActiveSurveyRoomResponse(
+                room.getId(),
+                surveyTitle,
+                room.getUserId(),
+                participantsCount,
+                room.getMaxParticipants()
+        );
     }
 }

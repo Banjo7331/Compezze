@@ -13,7 +13,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.util.StringUtils;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -23,8 +22,6 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 import org.springframework.messaging.simp.config.ChannelRegistration;
 
-import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -34,49 +31,45 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtTokenReader jwtTokenReader;
 
-    public WebSocketConfig(@Lazy JwtTokenReader jwtTokenReader) {
+    public WebSocketConfig(@Lazy final JwtTokenReader jwtTokenReader) {
         this.jwtTokenReader = jwtTokenReader;
     }
 
-
     @Override
-    public void configureMessageBroker(MessageBrokerRegistry registry) {
+    public void configureMessageBroker(final MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic", "/queue");
         registry.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
-    public void registerStompEndpoints(StompEndpointRegistry registry) {
+    public void registerStompEndpoints(final StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*");
-//                .withSockJS();
     }
 
     @Override
-    public void configureClientInboundChannel(ChannelRegistration registration) {
+    public void configureClientInboundChannel(final ChannelRegistration registration) {
         registration.interceptors(new ChannelInterceptor() {
             @Override
-            public Message<?> preSend(Message<?> message, MessageChannel channel) {
-                StompHeaderAccessor accessor =
-                        MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+            public Message<?> preSend(final Message<?> message, final MessageChannel channel) {
+                final var accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
-                if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+                if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
 
-                    String authHeader = accessor.getFirstNativeHeader("Authorization");
+                    final var authHeader = accessor.getFirstNativeHeader("Authorization");
 
                     if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
-                        String token = authHeader.substring(7);
+                        final var token = authHeader.substring(7);
 
                         if (jwtTokenReader.validateToken(token)) {
-                            UUID userId = jwtTokenReader.getUserId(token);
-                            List<String> roles = jwtTokenReader.getRoles(token);
+                            final var userId = jwtTokenReader.getUserId(token);
+                            final var roles = jwtTokenReader.getRoles(token);
 
-                            List<GrantedAuthority> authorities = roles.stream()
+                            final var authorities = roles.stream()
                                     .map(SimpleGrantedAuthority::new)
                                     .collect(Collectors.toList());
 
-                            UsernamePasswordAuthenticationToken authentication =
-                                    new UsernamePasswordAuthenticationToken(userId, null, authorities);
+                            final var authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
 
                             accessor.setUser(authentication);
                         } else {

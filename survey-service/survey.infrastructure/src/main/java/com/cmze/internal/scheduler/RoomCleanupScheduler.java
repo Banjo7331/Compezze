@@ -12,14 +12,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
-public class RoomCleanupSchedulerImpl {
+public class RoomCleanupScheduler {
 
-    private static final Logger logger = LoggerFactory.getLogger(RoomCleanupSchedulerImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(RoomCleanupScheduler.class);
 
     private final SurveyRoomRepository surveyRoomRepository;
     private final CloseSurveyRoomUseCase closeSurveyRoomUseCase;
 
-    public RoomCleanupSchedulerImpl(SurveyRoomRepository surveyRoomRepository,
+    public RoomCleanupScheduler(SurveyRoomRepository surveyRoomRepository,
                                 CloseSurveyRoomUseCase closeSurveyRoomUseCase) {
         this.surveyRoomRepository = surveyRoomRepository;
         this.closeSurveyRoomUseCase = closeSurveyRoomUseCase;

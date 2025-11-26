@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -34,62 +35,56 @@ public class JoinSurveyRoomUseCase {
     private final SoulboundTokenService soulboundTokenService;
     private final ApplicationEventPublisher eventPublisher;
 
-    public JoinSurveyRoomUseCase(SurveyRoomRepository surveyRoomRepository,
-                                 SurveyEntrantRepository surveyEntrantRepository,
-                                 SoulboundTokenService soulboundTokenService,
-                                 ApplicationEventPublisher eventPublisher) {
+    public JoinSurveyRoomUseCase(final SurveyRoomRepository surveyRoomRepository,
+                                 final SurveyEntrantRepository surveyEntrantRepository,
+                                 final SoulboundTokenService soulboundTokenService,
+                                 final ApplicationEventPublisher eventPublisher) {
         this.surveyRoomRepository = surveyRoomRepository;
         this.surveyEntrantRepository = surveyEntrantRepository;
         this.soulboundTokenService = soulboundTokenService;
         this.eventPublisher = eventPublisher;
     }
 
-    public ActionResult<JoinSurveyRoomResponse> execute(UUID roomId, UUID participantUserId, JoinSurveyRoomRequest request) {
+    public ActionResult<JoinSurveyRoomResponse> execute(final UUID roomId, final UUID participantUserId, final JoinSurveyRoomRequest request) {
         try {
-            Optional<SurveyRoom> roomOpt = surveyRoomRepository.findByIdWithSurveyAndQuestions(roomId);
+            final Optional<SurveyRoom> roomOpt = surveyRoomRepository.findByIdWithSurveyAndQuestions(roomId);
             if (roomOpt.isEmpty()) {
                 return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Room not found."));
             }
-            SurveyRoom room = roomOpt.get();
+            final SurveyRoom room = roomOpt.get();
 
             if (!room.isOpen()) {
-                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.GONE, "This room has been closed by the host."));
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.GONE, "Room closed."));
             }
 
-            String token = (request != null) ? request.getInvitationToken() : null;
+            final String token = (request != null) ? request.getInvitationToken() : null;
             if (room.isPrivate() && !isAccessAllowed(room, participantUserId, token)) {
-                return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                        HttpStatus.FORBIDDEN,
-                        "This room is private. You need a valid invitation link assigned to your account."
-                ));
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Access denied."));
             }
 
-            Optional<SurveyEntrant> existingEntrantOpt = surveyEntrantRepository
+            final Optional<SurveyEntrant> existingEntrantOpt = surveyEntrantRepository
                     .findBySurveyRoom_IdAndParticipantUserId(roomId, participantUserId);
 
-            boolean isHost = room.getUserId().equals(participantUserId);
+            final boolean isHost = room.getUserId().equals(participantUserId);
 
             if (existingEntrantOpt.isPresent()) {
-                SurveyEntrant existingEntrant = existingEntrantOpt.get();
+                final SurveyEntrant existingEntrant = existingEntrantOpt.get();
+                final boolean hasSubmitted = (existingEntrant.getSurveyAttempt() != null);
 
-                boolean hasSubmitted = (existingEntrant.getSurveyAttempt() != null);
-
-                JoinSurveyRoomResponse response = new JoinSurveyRoomResponse(
+                return ActionResult.success(new JoinSurveyRoomResponse(
                         existingEntrant.getId(),
                         mapSurveyToDto(room.getSurvey()),
                         hasSubmitted,
                         isHost
-                );
-
-                return ActionResult.success(response);
+                ));
             }
 
-            long currentSize = surveyEntrantRepository.countBySurveyRoom_Id(roomId);
+            final long currentSize = surveyEntrantRepository.countBySurveyRoom_Id(roomId);
             if (room.getMaxParticipants() != null && currentSize >= room.getMaxParticipants()) {
-                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "This room is full."));
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Room is full."));
             }
 
-            SurveyEntrant newEntrant = new SurveyEntrant();
+            final SurveyEntrant newEntrant = new SurveyEntrant();
             newEntrant.setSurveyRoom(room);
             newEntrant.setUserId(participantUserId);
 
@@ -97,35 +92,37 @@ public class JoinSurveyRoomUseCase {
 
             try {
                 savedParticipant = surveyEntrantRepository.save(newEntrant);
-                logger.info("User {} joined room {} with participant id {}", participantUserId, roomId, savedParticipant.getId());
+                logger.info("User {} joined room {}", participantUserId, roomId);
 
-                long newSize = currentSize + 1;
+                final long newSize = currentSize + 1;
                 eventPublisher.publishEvent(new EntrantJoinedEvent(this, savedParticipant, newSize));
-            }catch (DataIntegrityViolationException e) {
-                logger.info("Race condition: User {} already in room {}. Retrieving entry.", participantUserId, roomId);
-                savedParticipant = surveyEntrantRepository.findBySurveyRoom_IdAndParticipantUserId(roomId, participantUserId)
-                        .orElseThrow(() -> new IllegalStateException("DB Error: Duplicate key but record not found."));
 
+            } catch (DataIntegrityViolationException e) {
+                logger.info("Race condition: User {} already joined. Fetching existing.", participantUserId);
+
+                savedParticipant = surveyEntrantRepository.findBySurveyRoom_IdAndParticipantUserId(roomId, participantUserId)
+                        .orElseThrow(() -> new IllegalStateException("DB Inconsistency"));
             }
 
-            JoinSurveyRoomResponse response = new JoinSurveyRoomResponse(
+            return ActionResult.success(new JoinSurveyRoomResponse(
                     savedParticipant.getId(),
                     mapSurveyToDto(room.getSurvey()),
                     false,
                     isHost
-            );
-
-            return ActionResult.success(response);
+            ));
 
         } catch (Exception e) {
-            logger.error("Failed to join room {}: {}", roomId, e.getMessage(), e);
+            logger.error("Join failed for room {}: {}", roomId, e.getMessage(), e);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred."
+                    HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error."
             ));
         }
     }
 
-    private boolean isAccessAllowed(SurveyRoom room, UUID participantUserId, String token) {
+
+    private boolean isAccessAllowed(final SurveyRoom room, final UUID participantUserId, final String token) {
         if (room.getUserId().equals(participantUserId)) return true;
         if (token != null && !token.isBlank()) {
             return soulboundTokenService.validateSoulboundToken(token, participantUserId, room.getId());
@@ -133,9 +130,8 @@ public class JoinSurveyRoomUseCase {
         return false;
     }
 
-    private GetSurveyFormResponse mapSurveyToDto(SurveyForm survey) {
+    private GetSurveyFormResponse mapSurveyToDto(final SurveyForm survey) {
         if (survey == null) return null;
-
         return new GetSurveyFormResponse(
                 survey.getId(),
                 survey.getTitle(),

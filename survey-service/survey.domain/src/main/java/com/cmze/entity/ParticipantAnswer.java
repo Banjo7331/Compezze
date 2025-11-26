@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "participant_answers") // Zmieniono nazwę
+@Table(name = "survey_participant_answers") // Zmieniono nazwę
 public class ParticipantAnswer {
 
     @Id

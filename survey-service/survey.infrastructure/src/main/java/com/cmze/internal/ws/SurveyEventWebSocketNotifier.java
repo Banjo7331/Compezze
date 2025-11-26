@@ -1,9 +1,7 @@
 package com.cmze.internal.ws;
 
-import com.cmze.entity.SurveyEntrant;
-import com.cmze.entity.SurveyRoom;
 import com.cmze.internal.ws.messages.InvitationSocketMessage;
-import com.cmze.spi.helpers.room.FinalRoomResultDto;
+import com.cmze.spi.helpers.room.SurveyResultCounter;
 import com.cmze.ws.event.EntrantJoinedEvent;
 import com.cmze.ws.event.InvitationsGeneratedEvent;
 import com.cmze.ws.event.RoomClosedEvent;
@@ -17,7 +15,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
 
 @Service
 public class SurveyEventWebSocketNotifier {
@@ -25,21 +22,21 @@ public class SurveyEventWebSocketNotifier {
     private static final Logger logger = LoggerFactory.getLogger(SurveyEventWebSocketNotifier.class);
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final SurveyResultCounterImpl resultsCounter;
+    private final SurveyResultCounter resultsCounter;
 
-    public SurveyEventWebSocketNotifier(SimpMessagingTemplate messagingTemplate,
-                                        SurveyResultCounterImpl resultsCounter) {
+    public SurveyEventWebSocketNotifier(final SimpMessagingTemplate messagingTemplate,
+                                        final SurveyResultCounter resultsCounter) {
         this.messagingTemplate = messagingTemplate;
         this.resultsCounter = resultsCounter;
     }
 
     @EventListener
-    public void handleParticipantJoined(EntrantJoinedEvent event) {
-        SurveyEntrant participant = event.getParticipant();
-        UUID roomId = participant.getSurveyRoom().getId();
-        String topic = "/topic/room/" + roomId;
+    public void handleParticipantJoined(final EntrantJoinedEvent event) {
+        final var participant = event.getParticipant();
+        final var roomId = participant.getSurveyRoom().getId();
+        final var topic = "/topic/room/" + roomId;
 
-        UserJoinedSocketMessage payload = new UserJoinedSocketMessage(
+        final var payload = new UserJoinedSocketMessage(
                 participant.getId(),
                 participant.getUserId(),
                 event.getNewParticipantCount()
@@ -49,40 +46,38 @@ public class SurveyEventWebSocketNotifier {
         messagingTemplate.convertAndSend(topic, payload);
     }
 
-
     @EventListener
-    public void handleSurveySubmitted(SurveyAttemptSubmittedEvent event) {
-        UUID roomId = event.getSurveyAttempt().getParticipant().getSurveyRoom().getId();
-        String topic = "/topic/room/" + roomId;
+    public void handleSurveySubmitted(final SurveyAttemptSubmittedEvent event) {
+        final var roomId = event.getSurveyAttempt().getParticipant().getSurveyRoom().getId();
+        final var topic = "/topic/room/" + roomId;
 
-        FinalRoomResultDto liveResults = resultsCounter.calculate(roomId);
+        final var liveResults = resultsCounter.calculate(roomId);
 
-        LiveResultUpdateSocketMessage payload = new LiveResultUpdateSocketMessage(liveResults);
+        final var payload = new LiveResultUpdateSocketMessage(liveResults);
 
         logger.info("Sending LIVE_RESULTS_UPDATE to {}: {} submissions", topic, liveResults.getTotalSubmissions());
         messagingTemplate.convertAndSend(topic, payload);
     }
 
     @EventListener
-    public void handleRoomClosed(RoomClosedEvent event) {
-        UUID roomId = event.getRoom().getId();
-        String topic = "/topic/room/" + roomId;
+    public void handleRoomClosed(final RoomClosedEvent event) {
+        final var roomId = event.getRoom().getId();
+        final var topic = "/topic/room/" + roomId;
 
-        FinalRoomResultDto finalResults = resultsCounter.calculate(roomId);
+        final var finalResults = resultsCounter.calculate(roomId);
 
-        RoomClosedSocketMessage payload = new RoomClosedSocketMessage(finalResults);
+        final var payload = new RoomClosedSocketMessage(finalResults);
 
         logger.info("Sending ROOM_CLOSED to {}: {} participants", topic, finalResults.getTotalParticipants());
         messagingTemplate.convertAndSend(topic, payload);
     }
 
     @EventListener
-    public void handleInvitationsGenerated(InvitationsGeneratedEvent event) {
+    public void handleInvitationsGenerated(final InvitationsGeneratedEvent event) {
         logger.info("Processing generated invitations for room {}", event.getRoomId());
 
         event.getInvitations().forEach((userId, token) -> {
-
-            InvitationSocketMessage payload = new InvitationSocketMessage(
+            final var payload = new InvitationSocketMessage(
                     event.getRoomId(),
                     event.getSurveyTitle(),
                     token

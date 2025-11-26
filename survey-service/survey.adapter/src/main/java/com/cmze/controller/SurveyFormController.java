@@ -39,46 +39,51 @@ public class SurveyFormController {
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> createSurveyForm(
-            @RequestBody @Valid CreateSurveyFormRequest request,
-            Authentication authentication
+            @RequestBody @Valid final CreateSurveyFormRequest request,
+            final Authentication authentication
     ) {
-        UUID ownerUserId = (UUID) authentication.getPrincipal();
+        final var ownerUserId = (UUID) authentication.getPrincipal();
 
-        var result = createSurveyFormUseCase.execute(request, ownerUserId);
+        final var result = createSurveyFormUseCase.execute(request, ownerUserId);
 
         return result.toResponseEntity(HttpStatus.CREATED);
     }
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getAllSurveyForms(Authentication authentication,
-                                               @PageableDefault(size = 20, sort = "title") Pageable pageable
+    public ResponseEntity<?> getAllSurveyForms(
+            final Authentication authentication,
+            @PageableDefault(size = 20, sort = "title") final Pageable pageable
     ) {
-        UUID currentUserId = (UUID) authentication.getPrincipal();
+        final var currentUserId = (UUID) authentication.getPrincipal();
 
-        var result = getAllSurveyFormsUseCase.execute(currentUserId, pageable);
+        final var result = getAllSurveyFormsUseCase.execute(currentUserId, pageable);
 
         return result.toResponseEntity(HttpStatus.OK);
     }
 
     @GetMapping("/my")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getMyForms(Authentication authentication,
-                                        @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+    public ResponseEntity<?> getMyForms(
+            final Authentication authentication,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        UUID userId = (UUID) authentication.getPrincipal();
+        final var userId = (UUID) authentication.getPrincipal();
 
-        var result = getMySurveyFormsUseCase.execute(userId, pageable);
+        final var result = getMySurveyFormsUseCase.execute(userId, pageable);
 
         return result.toResponseEntity(HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> deleteSurveyForm(@PathVariable Long id, Authentication authentication) {
-        UUID userId = (UUID) authentication.getPrincipal();
+    public ResponseEntity<?> deleteSurveyForm(
+            @PathVariable final Long id,
+            final Authentication authentication
+    ) {
+        final var userId = (UUID) authentication.getPrincipal();
 
-        var result = deleteSurveyFormUseCase.execute(id, userId);
+        final var result = deleteSurveyFormUseCase.execute(id, userId);
 
         return result.toResponseEntity(HttpStatus.NO_CONTENT);
     }

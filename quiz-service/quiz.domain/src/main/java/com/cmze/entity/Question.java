@@ -1,12 +1,14 @@
 package com.cmze.entity;
 
 import com.cmze.enums.QuestionLevel;
+import com.cmze.enums.QuestionType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -14,35 +16,28 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "quiz-questions")
+@Table(name = "quiz_questions")
 public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String type;
+    private String title;
 
-    @Column(nullable = false)
-    private QuestionLevel level;
+    @Enumerated(EnumType.STRING)
+    private QuestionType type;
 
-    @Column(nullable = false)
-    private String description;
+    @Column(name = "time_limit_seconds", nullable = false)
+    private Integer timeLimitSeconds = 30;
 
-    @Column(nullable = false)
-    private Integer points;
+    @Column(name = "points", nullable = false)
+    private Integer points = 1000;
 
-    @ElementCollection
-    @CollectionTable(name = "question_possible_answers", joinColumns = @JoinColumn(name = "question_id"))
-    @Column(name = "possibleanswer")
-    private List<String> possibleAnswers;
-
-    @ElementCollection
-    @CollectionTable(name = "question_correct_answers", joinColumns = @JoinColumn(name = "question_id"))
-    @Column(name = "correctanswer", nullable = false)
-    private List<String> correctAnswer;
-
-    @ManyToOne
-    @JoinColumn(name = "quiz_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "quiz_form_id")
     private QuizForm quizForm;
+
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<QuizQuestionOption> options = new ArrayList<>();
 }

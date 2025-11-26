@@ -5,15 +5,21 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "quiz-form")
+@EntityListeners(AuditingEntityListener.class)
+@Table(name = "quiz_forms")
 public class QuizForm {
 
     @Id
@@ -21,8 +27,22 @@ public class QuizForm {
     private Long id;
 
     @Column(nullable = false)
-    private String name;
+    private String title;
 
-    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Question> questions;
+    @Column(name = "owner_user_id", nullable = false)
+    private UUID creatorId;
+
+    @Column(name = "is_private", nullable = false)
+    private boolean isPrivate = false;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean deleted = false;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @OneToMany(mappedBy = "quizForm", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OrderColumn(name = "question_index")
+    private List<Question> questions = new ArrayList<>();
 }

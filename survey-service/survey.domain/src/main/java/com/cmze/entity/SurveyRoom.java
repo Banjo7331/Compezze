@@ -1,7 +1,8 @@
 package com.cmze.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,7 +21,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Entity
 @EntityListeners(AuditingEntityListener.class)
-@Table(name = "room_results")
+@Table(name = "survey_room_results")
 public class SurveyRoom {
 
     @Id
@@ -31,7 +32,8 @@ public class SurveyRoom {
     private List<SurveyEntrant> participants = new ArrayList<>();
 
     @Column(name = "max_participants")
-    @Size(min = 1, max = 1000)
+    @Min(1)
+    @Max(1000)
     private Integer maxParticipants;
 
     @Column(name = "valid_until")
