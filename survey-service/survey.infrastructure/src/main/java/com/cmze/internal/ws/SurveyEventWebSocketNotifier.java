@@ -34,7 +34,7 @@ public class SurveyEventWebSocketNotifier {
     public void handleParticipantJoined(final EntrantJoinedEvent event) {
         final var participant = event.getParticipant();
         final var roomId = participant.getSurveyRoom().getId();
-        final var topic = "/topic/room/" + roomId;
+        final var topic = "/topic/survey/" + roomId;
 
         final var payload = new UserJoinedSocketMessage(
                 participant.getId(),
@@ -49,7 +49,7 @@ public class SurveyEventWebSocketNotifier {
     @EventListener
     public void handleSurveySubmitted(final SurveyAttemptSubmittedEvent event) {
         final var roomId = event.getSurveyAttempt().getParticipant().getSurveyRoom().getId();
-        final var topic = "/topic/room/" + roomId;
+        final var topic = "/topic/survey/" + roomId;
 
         final var liveResults = resultsCounter.calculate(roomId);
 
@@ -62,7 +62,7 @@ public class SurveyEventWebSocketNotifier {
     @EventListener
     public void handleRoomClosed(final RoomClosedEvent event) {
         final var roomId = event.getRoom().getId();
-        final var topic = "/topic/room/" + roomId;
+        final var topic = "/topic/survey/" + roomId;
 
         final var finalResults = resultsCounter.calculate(roomId);
 

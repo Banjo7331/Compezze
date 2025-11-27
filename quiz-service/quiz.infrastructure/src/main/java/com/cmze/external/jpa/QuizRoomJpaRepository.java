@@ -19,7 +19,10 @@ public interface QuizRoomJpaRepository extends JpaRepository<QuizRoom, UUID> {
 
     Page<QuizRoom> findByHostId(UUID hostId, Pageable pageable);
 
-    @Query("SELECT r FROM QuizRoom r LEFT JOIN FETCH r.quiz WHERE r.id = :id")
+    @Query("SELECT r FROM QuizRoom r " +
+            "LEFT JOIN FETCH r.quiz q " +
+            "LEFT JOIN FETCH q.questions qs " +
+            "WHERE r.id = :id")
     Optional<QuizRoom> findByIdWithQuiz(@Param("id") UUID id);
 
     @Query("SELECT r FROM QuizRoom r " +
