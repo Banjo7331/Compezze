@@ -1,9 +1,13 @@
 package com.cmze.usecase.room;
 
+import com.cmze.entity.Question;
+import com.cmze.entity.QuizRoom;
 import com.cmze.enums.QuizRoomStatus;
 import com.cmze.repository.QuizEntrantRepository;
 import com.cmze.repository.QuizRoomRepository;
-import com.cmze.response.GetQuizRoomDetailsResponse;
+import com.cmze.response.GetQuizRoomDetails.GetCurrentQuestionResponse;
+import com.cmze.response.GetQuizRoomDetails.GetQuestionOptionResponse;
+import com.cmze.response.GetQuizRoomDetails.GetQuizRoomDetailsResponse;
 import com.cmze.shared.ActionResult;
 import com.cmze.spi.helpers.room.QuizResultCounter;
 import com.cmze.usecase.UseCase;
@@ -14,6 +18,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @UseCase
 public class GetQuizRoomDetailsUseCase {
@@ -50,6 +55,8 @@ public class GetQuizRoomDetailsUseCase {
 
             final long participantsCount = quizEntrantRepository.countByQuizRoom_Id(roomId);
 
+            final var currentQuestionDto = resolveCurrentQuestion(room);
+
             final var response = new GetQuizRoomDetailsResponse(
                     room.getId(),
                     room.getQuiz().getTitle(),
@@ -57,7 +64,8 @@ public class GetQuizRoomDetailsUseCase {
                     room.getStatus(),
                     room.isPrivate(),
                     participantsCount,
-                    results
+                    results,
+                    currentQuestionDto
             );
 
             return ActionResult.success(response);
@@ -69,5 +77,28 @@ public class GetQuizRoomDetailsUseCase {
                     "An unexpected error occurred while loading room details."
             ));
         }
+    }
+
+    private GetCurrentQuestionResponse resolveCurrentQuestion(final QuizRoom room) {
+        if (room.getStatus() == QuizRoomStatus.QUESTION_ACTIVE && room.getCurrentQuestionIndex() >= 0) {
+            final var qEntity = room.getQuiz().getQuestions().get(room.getCurrentQuestionIndex());
+            return mapToCurrentQuestionDto(qEntity, room.getCurrentQuestionStartTime(), room.getCurrentQuestionIndex());
+        }
+        return null;
+    }
+
+    private GetCurrentQuestionResponse mapToCurrentQuestionDto(Question q, java.time.LocalDateTime startTime, int index) {
+        final var options = q.getOptions().stream()
+                .map(o -> new GetQuestionOptionResponse(o.getId(), o.getText()))
+                .collect(Collectors.toList());
+
+        return new GetCurrentQuestionResponse(
+                q.getId(),
+                index,
+                q.getTitle(),
+                q.getTimeLimitSeconds(),
+                startTime,
+                options
+        );
     }
 }

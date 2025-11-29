@@ -1,6 +1,7 @@
 package com.cmze.internal.ws;
 
 import com.cmze.internal.ws.messages.*;
+import com.cmze.spi.helpers.room.QuestionOptionDto;
 import com.cmze.ws.event.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,10 +48,14 @@ public class QuizEventWebSocketNotifier {
         final var topic = "/topic/quiz/" + event.getRoomId();
         final var question = event.getQuestion();
 
+        final var optionsDto = question.getOptions().stream()
+                .map(o -> new QuestionOptionDto(o.getId(), o.getText()))
+                .toList();
+
         final var payload = new NewQuestionSocketMessage(
                 event.getQuestionIndex(),
                 question.getTitle(),
-                question.getOptions().stream().map(o -> o.getText()).toList(),
+                optionsDto,
                 question.getTimeLimitSeconds(),
                 event.getStartTime()
         );

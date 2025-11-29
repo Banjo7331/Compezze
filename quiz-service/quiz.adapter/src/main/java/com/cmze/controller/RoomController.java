@@ -27,6 +27,7 @@ public class RoomController {
     private final SubmitQuizAnswerUseCase submitQuizAnswerUseCase;
     private final NextQuestionUseCase nextQuestionUseCase;
     private final FinishCurrentQuestionUseCase finishCurrentQuestionUseCase;
+    private final CloseQuizRoomUseCase closeQuizRoomUseCase;
     private final InviteUsersForQuizRoomUseCase inviteUsersForQuizRoomUseCase;
     private final GetQuizRoomDetailsUseCase getQuizRoomDetailsUseCase;
     private final GetMyQuizRoomsResultsUseCase getMyQuizRoomsResultsUseCase;
@@ -38,6 +39,7 @@ public class RoomController {
                           final SubmitQuizAnswerUseCase submitQuizAnswerUseCase,
                           final NextQuestionUseCase nextQuestionUseCase,
                           final FinishCurrentQuestionUseCase finishCurrentQuestionUseCase,
+                          final CloseQuizRoomUseCase closeQuizRoomUseCase,
                           final InviteUsersForQuizRoomUseCase inviteUsersForQuizRoomUseCase,
                           final GetQuizRoomDetailsUseCase getQuizRoomDetailsUseCase,
                           final GetMyQuizRoomsResultsUseCase getMyQuizRoomsResultsUseCase,
@@ -48,6 +50,7 @@ public class RoomController {
         this.submitQuizAnswerUseCase = submitQuizAnswerUseCase;
         this.nextQuestionUseCase = nextQuestionUseCase;
         this.finishCurrentQuestionUseCase = finishCurrentQuestionUseCase;
+        this.closeQuizRoomUseCase = closeQuizRoomUseCase;
         this.inviteUsersForQuizRoomUseCase = inviteUsersForQuizRoomUseCase;
         this.getQuizRoomDetailsUseCase = getQuizRoomDetailsUseCase;
         this.getMyQuizRoomsResultsUseCase = getMyQuizRoomsResultsUseCase;
@@ -126,6 +129,19 @@ public class RoomController {
         final var hostId = (UUID) authentication.getPrincipal();
 
         final var result = finishCurrentQuestionUseCase.execute(roomId, hostId);
+
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
+    @PostMapping("/{roomId}/close")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> closeRoom(
+            @PathVariable final UUID roomId,
+            final Authentication authentication
+    ) {
+        final var hostUserId = (UUID) authentication.getPrincipal();
+
+        final var result = closeQuizRoomUseCase.execute(roomId, hostUserId);
 
         return result.toResponseEntity(HttpStatus.OK);
     }

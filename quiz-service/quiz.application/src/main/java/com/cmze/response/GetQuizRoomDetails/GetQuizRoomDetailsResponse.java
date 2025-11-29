@@ -1,4 +1,4 @@
-package com.cmze.response;
+package com.cmze.response.GetQuizRoomDetails;
 
 import com.cmze.enums.QuizRoomStatus;
 import com.cmze.spi.helpers.room.FinalRoomResultsDto;
@@ -19,4 +19,5 @@ public class GetQuizRoomDetailsResponse {
     private boolean isPrivate;
     private long currentParticipants;
     private FinalRoomResultsDto currentResults;
+    private GetCurrentQuestionResponse currentQuestion;
 }
