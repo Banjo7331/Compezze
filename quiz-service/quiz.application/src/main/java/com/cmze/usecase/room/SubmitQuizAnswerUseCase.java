@@ -1,6 +1,7 @@
 package com.cmze.usecase.room;
 
 import com.cmze.entity.QuizAnswer;
+import com.cmze.entity.QuizRoom;
 import com.cmze.enums.QuizRoomStatus;
 import com.cmze.repository.QuizAnswerRepository;
 import com.cmze.repository.QuizEntrantRepository;
@@ -30,6 +31,8 @@ public class SubmitQuizAnswerUseCase {
     private final QuizEntrantRepository quizEntrantRepository;
     private final QuizAnswerRepository quizAnswerRepository;
     private final QuizScoringCalculator scoringStrategy;
+
+    private static final int AUTO_FINISH_DELAY_SECONDS = 5;
 
     public SubmitQuizAnswerUseCase(final QuizRoomRepository quizRoomRepository,
                                    final QuizEntrantRepository quizEntrantRepository,
@@ -76,7 +79,7 @@ public class SubmitQuizAnswerUseCase {
 
             final var now = LocalDateTime.now();
             final long elapsedMs = ChronoUnit.MILLIS.between(room.getCurrentQuestionStartTime(), now);
-            final long limitMs = currentQuestion.getTimeLimitSeconds() * 1000L;
+            final long limitMs = room.getTimePerQuestion() * 1000L;
 
             if (elapsedMs > (limitMs + 2000)) {
                 return ActionResult.failure(ProblemDetail.forStatusAndDetail(
@@ -105,7 +108,7 @@ public class SubmitQuizAnswerUseCase {
             if (isCorrect) {
                 pointsAwarded = scoringStrategy.calculateScore(
                         currentQuestion.getPoints(),
-                        currentQuestion.getTimeLimitSeconds(),
+                        room.getTimePerQuestion(),
                         elapsedMs
                 );
             }
@@ -139,6 +142,8 @@ public class SubmitQuizAnswerUseCase {
             quizAnswerRepository.save(answer);
             quizEntrantRepository.save(entrant);
 
+            checkAndScheduleAutoFinish(room, currentIndex);
+
             logger.info("User {} answered Q{} in {}ms. Correct: {}, Points: {}",
                     userId, currentIndex, elapsedMs, isCorrect, pointsAwarded);
 
@@ -158,6 +163,27 @@ public class SubmitQuizAnswerUseCase {
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(
                     HttpStatus.INTERNAL_SERVER_ERROR, "Error processing answer"
             ));
+        }
+    }
+
+    private void checkAndScheduleAutoFinish(final QuizRoom room, int questionIndex) {
+        long totalEntrants = quizEntrantRepository.countByQuizRoom_Id(room.getId());
+        long activePlayersCount = Math.max(0, totalEntrants - 1);
+
+        if (activePlayersCount <= 0) return;
+
+        long submittedAnswersCount = quizAnswerRepository.countByRoomIdAndQuestionIndex(room.getId(), questionIndex);
+
+        if (submittedAnswersCount >= activePlayersCount) {
+            logger.info("All players answered in room {}! Shortening timer.", room.getId());
+
+            final var now = LocalDateTime.now();
+            final var newEndTime = now.plusSeconds(AUTO_FINISH_DELAY_SECONDS);
+
+            if (newEndTime.isBefore(room.getCurrentQuestionEndTime())) {
+                room.setCurrentQuestionEndTime(newEndTime);
+                quizRoomRepository.save(room);
+            }
         }
     }
 }

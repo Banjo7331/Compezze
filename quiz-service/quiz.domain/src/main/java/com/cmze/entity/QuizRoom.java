@@ -44,6 +44,9 @@ public class QuizRoom {
     @Max(1000)
     private Integer maxParticipants;
 
+    @Column(name = "time_per_question", nullable = false)
+    private Integer timePerQuestion;
+
     @Column(name = "is_private", nullable = false)
     private boolean isPrivate = false;
 

@@ -14,4 +14,5 @@ public class QuizNewQuestionEvent {
     private final Question question;
     private final int questionIndex;
     private final LocalDateTime startTime;
+    private final int timeLimitSeconds;
 }

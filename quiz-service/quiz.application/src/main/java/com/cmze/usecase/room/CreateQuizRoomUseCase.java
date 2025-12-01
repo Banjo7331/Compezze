@@ -25,7 +25,7 @@ public class CreateQuizRoomUseCase {
 
     private static final Logger logger = LoggerFactory.getLogger(CreateQuizRoomUseCase.class);
 
-    private static final int ROOM_TTL_MINUTES = 90;
+    private static final int ROOM_TTL_MINUTES = 100;
 
     private final QuizFormRepository quizFormRepository;
     private final QuizRoomRepository quizRoomRepository;
@@ -65,12 +65,11 @@ public class CreateQuizRoomUseCase {
             final var room = new QuizRoom();
             room.setQuiz(form);
             room.setHostId(hostId);
-
+            room.setTimePerQuestion(request.getTimePerQuestion());
+            room.setMaxParticipants(request.getMaxParticipants());
             room.setStatus(QuizRoomStatus.LOBBY);
             room.setCurrentQuestionIndex(-1);
-
             room.setCreatedAt(LocalDateTime.now());
-            room.setMaxParticipants(request.getMaxParticipants());
             room.setPrivate(request.isPrivate());
 
             room.setValidUntil(LocalDateTime.now().plusMinutes(ROOM_TTL_MINUTES));

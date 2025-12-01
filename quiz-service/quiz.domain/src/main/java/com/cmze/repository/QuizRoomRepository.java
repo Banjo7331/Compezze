@@ -11,6 +11,7 @@ import java.util.UUID;
 
 public interface QuizRoomRepository {
     boolean existsActiveRoomsForQuiz(Long quizFormId);
+    Optional<QuizRoom> findById(UUID id);
     Optional<QuizRoom> findByIdWithQuiz(UUID id);
     QuizRoom save(QuizRoom quizRoom);
     Optional<QuizRoom> findByIdWithFullQuizStructure(UUID id);

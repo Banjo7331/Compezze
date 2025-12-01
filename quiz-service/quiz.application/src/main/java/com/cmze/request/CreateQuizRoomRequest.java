@@ -22,6 +22,10 @@ public class CreateQuizRoomRequest {
     @Max(value = 1000, message = "Maximum 1000 participants")
     private Integer maxParticipants = 50;
 
+    @Min(value = 5, message = "Minimum 5 seconds per question")
+    @Max(value = 270, message = "Maximum 270 seconds per question")
+    private Integer timePerQuestion = 15;
+
     private boolean isPrivate;
 
     private List<UUID> allowedUserIds;

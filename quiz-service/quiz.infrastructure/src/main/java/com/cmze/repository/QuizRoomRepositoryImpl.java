@@ -26,6 +26,11 @@ public class QuizRoomRepositoryImpl implements QuizRoomRepository {
     }
 
     @Override
+    public Optional<QuizRoom> findById(UUID id) {
+        return impl.findById(id);
+    }
+
+    @Override
     public Optional<QuizRoom> findByIdWithQuiz(UUID id) {
         return impl.findByIdWithQuiz(id);
     }

@@ -65,7 +65,10 @@ public class StartQuizUseCase {
 
             final var now = LocalDateTime.now();
             room.setCurrentQuestionStartTime(now);
-            room.setCurrentQuestionEndTime(now.plusSeconds(firstQuestion.getTimeLimitSeconds()));
+
+            final var timeLimit = room.getTimePerQuestion();
+
+            room.setCurrentQuestionEndTime(now.plusSeconds(timeLimit));
 
             quizRoomRepository.save(room);
             logger.info("Quiz {} started by host {}. Question 0 active.", roomId, hostId);
@@ -76,7 +79,8 @@ public class StartQuizUseCase {
                     roomId,
                     firstQuestion,
                     firstIndex,
-                    now
+                    now,
+                    timeLimit
             ));
 
             return ActionResult.success(null);

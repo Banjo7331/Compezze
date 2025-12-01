@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class RefreshTokenUtil {
 
-    // Wstrzykujemy wartość z pliku properties (w ms), np. 604800000
     @Value("${app.jwt-refresh-expiration-milliseconds}")
     private Long refreshTokenDurationMs;
 

@@ -17,4 +17,8 @@ public interface QuizAnswerJpaRepository extends JpaRepository<QuizAnswer, Long>
     boolean existsByUserIdAndRoomIdAndQuestionIndex(@Param("userId") UUID userId,
                                                     @Param("roomId") UUID roomId,
                                                     @Param("questionIndex") int questionIndex);
+
+    @Query("SELECT COUNT(a) FROM QuizAnswer a " +
+            "WHERE a.entrant.quizRoom.id = :roomId AND a.questionIndex = :questionIndex")
+    long countByRoomIdAndQuestionIndex(@Param("roomId") UUID roomId, @Param("questionIndex") int questionIndex);
 }

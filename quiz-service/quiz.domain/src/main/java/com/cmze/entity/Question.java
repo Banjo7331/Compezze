@@ -28,9 +28,6 @@ public class Question {
     @Enumerated(EnumType.STRING)
     private QuestionType type;
 
-    @Column(name = "time_limit_seconds", nullable = false)
-    private Integer timeLimitSeconds = 30;
-
     @Column(name = "points", nullable = false)
     private Integer points = 1000;
 

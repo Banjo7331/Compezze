@@ -53,10 +53,11 @@ public class QuizEventWebSocketNotifier {
                 .toList();
 
         final var payload = new NewQuestionSocketMessage(
+                question.getId(),
                 event.getQuestionIndex(),
                 question.getTitle(),
                 optionsDto,
-                question.getTimeLimitSeconds(),
+                event.getTimeLimitSeconds(),
                 event.getStartTime()
         );
 

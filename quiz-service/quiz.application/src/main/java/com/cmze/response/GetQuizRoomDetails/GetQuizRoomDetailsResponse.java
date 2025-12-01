@@ -15,6 +15,7 @@ public class GetQuizRoomDetailsResponse {
     private UUID roomId;
     private String quizTitle;
     private UUID hostId;
+    private boolean isParticipant;
     private QuizRoomStatus status;
     private boolean isPrivate;
     private long currentParticipants;

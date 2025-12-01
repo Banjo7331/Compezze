@@ -162,8 +162,11 @@ public class RoomController {
 
     @GetMapping("/{roomId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getRoomDetails(@PathVariable final UUID roomId) {
-        final var result = getQuizRoomDetailsUseCase.execute(roomId);
+    public ResponseEntity<?> getRoomDetails(
+            final Authentication authentication,
+            @PathVariable final UUID roomId) {
+        final var userId = (UUID) authentication.getPrincipal();
+        final var result = getQuizRoomDetailsUseCase.execute(roomId, userId);
         return result.toResponseEntity(HttpStatus.OK);
     }
 

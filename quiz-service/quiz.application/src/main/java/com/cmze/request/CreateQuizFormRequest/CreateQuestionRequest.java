@@ -23,9 +23,6 @@ public class CreateQuestionRequest {
     @NotNull(message = "Question type is required")
     private QuestionType type;
 
-    @Min(value = 5, message = "Time limit must be at least 5 seconds")
-    private Integer timeLimitSeconds = 30;
-
     @Min(value = 1, message = "Points must be positive")
     private Integer points = 1000;
 

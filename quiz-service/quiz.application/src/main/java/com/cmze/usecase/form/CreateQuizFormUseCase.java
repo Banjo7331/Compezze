@@ -76,7 +76,6 @@ public class CreateQuizFormUseCase {
                 final var question = new Question();
                 question.setTitle(qDto.getTitle());
                 question.setType(qDto.getType());
-                question.setTimeLimitSeconds(qDto.getTimeLimitSeconds());
                 question.setPoints(qDto.getPoints());
                 question.setQuizForm(quizForm);
 

@@ -5,6 +5,8 @@ import com.cmze.entity.QuizRoom;
 import com.cmze.enums.QuizRoomStatus;
 import com.cmze.repository.QuizRoomRepository;
 import com.cmze.shared.ActionResult;
+import com.cmze.spi.helpers.room.QuizResultCounter;
+import com.cmze.ws.event.QuizLeaderboardEvent;
 import com.cmze.usecase.UseCase;
 import com.cmze.ws.event.QuizQuestionFinishedEvent;
 import org.slf4j.Logger;
@@ -27,11 +29,14 @@ public class FinishCurrentQuestionUseCase {
 
     private final QuizRoomRepository quizRoomRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final QuizResultCounter quizResultCounter;
 
     public FinishCurrentQuestionUseCase(final QuizRoomRepository quizRoomRepository,
-                                        final ApplicationEventPublisher eventPublisher) {
+                                        final ApplicationEventPublisher eventPublisher,
+                                        final QuizResultCounter quizResultCounter) {
         this.quizRoomRepository = quizRoomRepository;
         this.eventPublisher = eventPublisher;
+        this.quizResultCounter = quizResultCounter;
     }
 
     @Transactional
@@ -97,6 +102,13 @@ public class FinishCurrentQuestionUseCase {
                     .findFirst()
                     .orElse(null);
         }
+
+        final var resultsDto = quizResultCounter.calculate(room.getId());
+
+        eventPublisher.publishEvent(new QuizLeaderboardEvent(
+                room.getId(),
+                resultsDto.getLeaderboard()
+        ));
 
         eventPublisher.publishEvent(new QuizQuestionFinishedEvent(
                 room.getId(),

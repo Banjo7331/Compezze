@@ -21,6 +21,11 @@ public class QuizAnswerRepositoryImpl implements QuizAnswerRepository {
     }
 
     @Override
+    public long countByRoomIdAndQuestionIndex(UUID roomId, int questionIndex) {
+        return impl.countByRoomIdAndQuestionIndex(roomId, questionIndex);
+    }
+
+    @Override
     public QuizAnswer save(QuizAnswer quizAnswer) {
         return impl.save(quizAnswer);
     }

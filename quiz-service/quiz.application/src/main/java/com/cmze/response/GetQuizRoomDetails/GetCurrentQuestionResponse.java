@@ -14,7 +14,6 @@ public class GetCurrentQuestionResponse {
     private Long questionId;
     private int questionIndex;
     private String title;
-    private int timeLimitSeconds;
     private LocalDateTime startTime;
     private List<GetQuestionOptionResponse> options;
 }

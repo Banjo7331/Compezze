@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class NewQuestionSocketMessage {
     private final String event = "NEW_QUESTION";
-
+    private Long questionId;
     private int questionIndex;
     private String title;
     private List<QuestionOptionDto> options;

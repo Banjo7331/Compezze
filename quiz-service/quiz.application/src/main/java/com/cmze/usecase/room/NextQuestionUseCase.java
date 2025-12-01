@@ -94,12 +94,12 @@ public class NextQuestionUseCase {
 
         final var nextQuestion = questions.get(nextIndex);
         final var now = LocalDateTime.now();
+        final int timeLimit = room.getTimePerQuestion();
 
         room.setStatus(QuizRoomStatus.QUESTION_ACTIVE);
         room.setCurrentQuestionIndex(nextIndex);
         room.setCurrentQuestionStartTime(now);
-
-        room.setCurrentQuestionEndTime(now.plusSeconds(nextQuestion.getTimeLimitSeconds()));
+        room.setCurrentQuestionEndTime(now.plusSeconds(timeLimit));
 
         quizRoomRepository.save(room);
         logger.info("Starting Question {} for room {}", nextIndex, room.getId());
@@ -108,7 +108,8 @@ public class NextQuestionUseCase {
                 room.getId(),
                 nextQuestion,
                 nextIndex,
-                now
+                now,
+                timeLimit
         ));
 
         return ActionResult.success(null);

@@ -38,7 +38,7 @@ public class GetQuizRoomDetailsUseCase {
     }
 
     @Transactional(readOnly = true)
-    public ActionResult<GetQuizRoomDetailsResponse> execute(final UUID roomId) {
+    public ActionResult<GetQuizRoomDetailsResponse> execute(final UUID roomId, final UUID requestingUserId) {
         try {
             final var roomOpt = quizRoomRepository.findByIdWithQuiz(roomId);
 
@@ -55,12 +55,17 @@ public class GetQuizRoomDetailsUseCase {
 
             final long participantsCount = quizEntrantRepository.countByQuizRoom_Id(roomId);
 
+            final boolean isParticipant = quizEntrantRepository
+                    .findByQuizRoom_IdAndUserId(roomId, requestingUserId)
+                    .isPresent();
+
             final var currentQuestionDto = resolveCurrentQuestion(room);
 
             final var response = new GetQuizRoomDetailsResponse(
                     room.getId(),
                     room.getQuiz().getTitle(),
                     room.getHostId(),
+                    isParticipant,
                     room.getStatus(),
                     room.isPrivate(),
                     participantsCount,
@@ -96,7 +101,6 @@ public class GetQuizRoomDetailsUseCase {
                 q.getId(),
                 index,
                 q.getTitle(),
-                q.getTimeLimitSeconds(),
                 startTime,
                 options
         );
