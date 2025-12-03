@@ -1,59 +1,122 @@
 package com.cmze.controller;
 
 import com.cmze.request.CreateContestRequest;
-import com.cmze.usecase.contest.CloseContestUseCase;
-import com.cmze.usecase.contest.CreateContestUseCase;
-import com.cmze.usecase.contest.StartContestUseCase;
+import com.cmze.request.ManageRoleRequest;
+import com.cmze.request.ReorderStagesRequest;
+import com.cmze.request.UpdateStageRequest;
+import com.cmze.usecase.contest.*;
 import com.cmze.usecase.participant.SubmitEntryForContestUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("contest")
 public class ContestController {
 
     private final CreateContestUseCase createContestUseCase;
+    private final GetUpcomingContestUseCase getUpcomingContestUseCase;
+    private final ManageContestRolesUseCase manageContestRolesUseCase;
+    private final GetContestDetailsUseCase getContestDetailsUseCase;
+    private final JoinContestUseCase joinContestUseCase;
     private final SubmitEntryForContestUseCase submitEntryForContestUseCase;
     private final CloseContestUseCase closeContestUseCase;
     private final StartContestUseCase startContestUseCase;
 
     public ContestController(CreateContestUseCase createContestUseCase,
+                             GetUpcomingContestUseCase getUpcomingContestUseCase,
+                             ManageContestRolesUseCase manageContestRolesUseCase,
+                             GetContestDetailsUseCase getContestDetailsUseCase,
+                             JoinContestUseCase joinContestUseCase,
                              SubmitEntryForContestUseCase submitEntryForContestUseCase,
                              CloseContestUseCase closeContestUseCase,
                              StartContestUseCase startContestUseCase
     ) {
         this.createContestUseCase = createContestUseCase;
+        this.getUpcomingContestUseCase = getUpcomingContestUseCase;
+        this.manageContestRolesUseCase = manageContestRolesUseCase;
+        this.getContestDetailsUseCase = getContestDetailsUseCase;
+        this.joinContestUseCase = joinContestUseCase;
         this.submitEntryForContestUseCase = submitEntryForContestUseCase;
         this.closeContestUseCase = closeContestUseCase;
         this.startContestUseCase = startContestUseCase;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createContest(@RequestPart("payload") @Valid CreateContestRequest request,
-                                           @RequestHeader(name="X-User-Id") String organizerId
-    ){
-        var result = createContestUseCase.execute(request, organizerId);
+    @PostMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> createContest(
+            @RequestBody @Valid final CreateContestRequest request,
+            final Authentication authentication
+    ) {
+        final var organizerId = (UUID) authentication.getPrincipal();
+        final var result = createContestUseCase.execute(request, organizerId.toString());
+
         return result.toResponseEntity(HttpStatus.CREATED);
     }
 
-    @PostMapping("/{id}/start")
-    public ResponseEntity<?> start(@PathVariable String id,
-                                   @RequestHeader("X-User-Id") String userId) {
-        var result = startContestUseCase.execute(id, userId);
-        // Use case emituje CONTEST_STARTED przez WS/SSE; REST może zwrócić 204.
-        return result.toResponseEntity(HttpStatus.NO_CONTENT);
+    @GetMapping("/upcoming")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getUpcomingContest(final Authentication authentication) {
+        final var userId = (UUID) authentication.getPrincipal();
+        final var result = getUpcomingContestUseCase.execute(userId);
+
+        return result.toResponseEntity(HttpStatus.OK);
     }
 
-    @PostMapping("/{id}/close")
-    public ResponseEntity<?> close(@PathVariable String id,
-                                   @RequestHeader("X-User-Id") String organizerId
+    @PutMapping("/{contestId}/roles")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> manageRole(
+            @PathVariable final Long contestId,
+            @RequestBody @Valid final ManageRoleRequest request,
+            final Authentication authentication
     ) {
-        var result = closeContestUseCase.execute(id, organizerId);
-        return result.toResponseEntity(HttpStatus.NO_CONTENT);
+        final var organizerId = (UUID) authentication.getPrincipal();
+
+        final var result = manageContestRolesUseCase.execute(contestId, organizerId, request);
+
+        return result.toResponseEntity(HttpStatus.OK);
     }
+
+    @GetMapping("/{contestId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getDetails(@PathVariable String contestId) {
+        var result = getContestDetailsUseCase.execute(contestId);
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
+    @PostMapping("/{contestId}/join")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> joinContest(
+            @PathVariable final Long contestId,
+            final Authentication authentication
+    ) {
+        final var userId = (UUID) authentication.getPrincipal();
+
+        final var result = joinContestUseCase.execute(contestId, userId);
+
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
+
+//    @PostMapping("/{id}/start")
+//    public ResponseEntity<?> start(@PathVariable String id,
+//                                   @RequestHeader("X-User-Id") String userId) {
+//        var result = startContestUseCase.execute(id, userId);
+//        // Use case emituje CONTEST_STARTED przez WS/SSE; REST może zwrócić 204.
+//        return result.toResponseEntity(HttpStatus.NO_CONTENT);
+//    }
+//
+//    @PostMapping("/{id}/close")
+//    public ResponseEntity<?> close(@PathVariable String id,
+//                                   @RequestHeader("X-User-Id") String organizerId
+//    ) {
+//        var result = closeContestUseCase.execute(id, organizerId);
+//        return result.toResponseEntity(HttpStatus.NO_CONTENT);
+//    }
 
 }

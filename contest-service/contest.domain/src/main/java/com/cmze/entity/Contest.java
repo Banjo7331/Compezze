@@ -2,7 +2,6 @@ package com.cmze.entity;
 
 import com.cmze.enums.ContestCategory;
 import com.cmze.enums.ContestStatus;
-import com.cmze.enums.SocialPlatform;
 import com.cmze.enums.SubmissionMediaPolicy;
 import jakarta.persistence.*;
 
@@ -22,8 +21,8 @@ import java.util.*;
 public class Contest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @NotBlank(message = "Contest name must not be blank")
     @Size(min = 3, max = 100, message = "Contest name must be between 3 and 100 characters")
@@ -74,14 +73,7 @@ public class Contest {
     @Embedded
     private CoverImageRef coverImage;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "contest_publish_targets",
-            joinColumns = @JoinColumn(name = "contest_id"))
-    @Column(name = "platform", nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Set<SocialPlatform> publishTargets = new HashSet<>();
-
-    @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "contest", cascade = CascadeType.ALL, fetch = FetchType.LAZY) // <--- POPRAWKA
     private List<Submission> submissions = new ArrayList<>();
 
     @OneToMany(mappedBy = "contest", cascade = CascadeType.ALL, orphanRemoval = true)

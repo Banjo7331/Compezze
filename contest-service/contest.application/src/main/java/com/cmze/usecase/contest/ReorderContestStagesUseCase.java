@@ -1,80 +1,84 @@
 package com.cmze.usecase.contest;
 
+import com.cmze.entity.Stage;
 import com.cmze.repository.ContestRepository;
-import com.cmze.repository.StageRepository;
 import com.cmze.request.ReorderStagesRequest;
 import com.cmze.shared.ActionResult;
 import com.cmze.usecase.UseCase;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @UseCase
 public class ReorderContestStagesUseCase {
 
-    private final ContestRepository contestRepository;
-    private final StageRepository stageRepository;
+    private static final Logger logger = LoggerFactory.getLogger(ReorderContestStagesUseCase.class);
 
-    public ReorderContestStagesUseCase(ContestRepository contestRepository,
-                                       StageRepository stageRepository) {
+    private final ContestRepository contestRepository;
+
+    public ReorderContestStagesUseCase(final ContestRepository contestRepository) {
         this.contestRepository = contestRepository;
-        this.stageRepository = stageRepository;
     }
 
     @Transactional
-    public ActionResult<Void> execute(String contestId,
-                                      String organizerId,
-                                      ReorderStagesRequest req) {
+    public ActionResult<Void> execute(final Long contestId, final ReorderStagesRequest request, final UUID organizerId) {
+        try {
+            final var contestOpt = contestRepository.findById(contestId);
 
-        var contestOpt = contestRepository.findById(contestId);
-        if (contestOpt.isEmpty()) {
+            if (contestOpt.isEmpty()) {
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Contest not found"));
+            }
+            final var contest = contestOpt.get();
+
+            if (!contest.getOrganizerId().equals(organizerId.toString())) {
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Not authorized to modify this contest"));
+            }
+
+            final var currentStages = contest.getStages();
+
+            if (currentStages.size() != request.getStageIds().size()) {
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(
+                        HttpStatus.BAD_REQUEST,
+                        "Mismatch in stage count. Expected " + currentStages.size() + ", got " + request.getStageIds().size()
+                ));
+            }
+
+            final var stagesMap = currentStages.stream()
+                    .collect(Collectors.toMap(Stage::getId, Function.identity()));
+
+            int newPosition = 1;
+
+            for (final Long stageId : request.getStageIds()) {
+                final var stage = stagesMap.get(stageId);
+
+                if (stage == null) {
+                    return ActionResult.failure(ProblemDetail.forStatusAndDetail(
+                            HttpStatus.BAD_REQUEST,
+                            "Stage with ID " + stageId + " does not belong to contest " + contestId
+                    ));
+                }
+
+                stage.setPosition(newPosition++);
+            }
+
+            contestRepository.save(contest);
+
+            logger.info("Reordered stages for contest {}", contestId);
+            return ActionResult.success(null);
+
+        } catch (Exception e) {
+            logger.error("Failed to reorder stages for contest {}", contestId, e);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.NOT_FOUND, "Contest not found."
+                    HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred while reordering stages."
             ));
         }
-        var contest = contestOpt.get();
-
-        if (contest.getOrganizerId() != null && !contest.getOrganizerId().equals(organizerId)) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.FORBIDDEN, "You are not the organizer of this contest."
-            ));
-        }
-
-        var provided = req.stageIdsInOrder();
-        if (provided == null || provided.isEmpty()) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.BAD_REQUEST, "stageIdsInOrder is required."
-            ));
-        }
-
-        var stages = stageRepository.findByContest_Id(contestId);
-        if (stages.isEmpty()) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNPROCESSABLE_ENTITY, "No stages to reorder."
-            ));
-        }
-
-        var providedSet = new HashSet<>(provided);
-        if (providedSet.size() != provided.size()) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNPROCESSABLE_ENTITY, "Stage ids must be unique."
-            ));
-        }
-
-        var idsInContest = stages.stream().map(Stage::getId).collect(Collectors.toSet());
-        if (!idsInContest.equals(providedSet)) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNPROCESSABLE_ENTITY, "Provided ids must match exactly contest stages."
-            ));
-        }
-
-        Map<Long, Stage> byId = stages.stream().collect(Collectors.toMap(Stage::getId, s -> s));
-        int pos = 1;
-        for (Long id : provided) {
-            byId.get(id).setPosition(pos++);
-        }
-
-        stageRepository.saveAll(stages);
-        return ActionResult.success(null);
     }
 }

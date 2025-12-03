@@ -36,10 +36,8 @@ public abstract class Stage {
     @Min(1)
     private int position;
 
-    @NotNull
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", insertable = false, updatable = false)
-    private StageType type;
+    @Transient
+    public abstract StageType getType();
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "contest_id", nullable = false)

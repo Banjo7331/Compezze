@@ -5,6 +5,8 @@ import com.cmze.external.jpa.ParticipantJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public class ParticipantRepositoryImpl implements ParticipantRepository{
 
@@ -15,14 +17,24 @@ public class ParticipantRepositoryImpl implements ParticipantRepository{
         this.impl = impl;
     }
 
+//    @Override
+//    public boolean existsByContestIdAndUserId(String contestId, String userId) {
+//        return false;
+//    }
+
     @Override
-    public boolean existsByContestIdAndUserId(String contestId, String userId) {
-        return false;
+    public Participant save(Participant participant) {
+        return impl.save(participant);
     }
 
     @Override
-    public Participant findsByContestIdAndUserId(String contestId, String userId) {
-        return null;
+    public Optional<Participant> findByContestIdAndUserId(Long contestId, String userId) {
+        return impl.findByContestIdAndUserId(contestId, userId);
+    }
+
+    @Override
+    public long countByContest_Id(Long contestId) {
+        return impl.countByContest_Id(contestId);
     }
 
 }

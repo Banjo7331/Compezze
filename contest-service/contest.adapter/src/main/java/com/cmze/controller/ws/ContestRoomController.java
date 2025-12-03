@@ -20,11 +20,11 @@ public class ContestRoomController {
         this.sendChatMessageUseCase = sendChatMessageUseCase;
     }
 
-    @MessageMapping("/rooms/{roomKey}/chat.send")
-    public void sendChat(@DestinationVariable String roomKey,
-                         @Payload @Valid ChatCommand cmd,
-                         @Header("simpSessionAttributes") Map<String, Object> attrs) {
-        String userId = attrs != null && attrs.get("userId") != null ? attrs.get("userId").toString() : null;
-        sendChatMessageUseCase.execute(roomKey, userId, cmd);
-    }
+//    @MessageMapping("/rooms/{roomKey}/chat.send")
+//    public void sendChat(@DestinationVariable String roomKey,
+//                         @Payload @Valid ChatCommand cmd,
+//                         @Header("simpSessionAttributes") Map<String, Object> attrs) {
+//        String userId = attrs != null && attrs.get("userId") != null ? attrs.get("userId").toString() : null;
+//        sendChatMessageUseCase.execute(roomKey, userId, cmd);
+//    }
 }

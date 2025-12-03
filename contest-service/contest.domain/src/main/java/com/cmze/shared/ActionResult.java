@@ -31,7 +31,6 @@ public record ActionResult<T>(boolean success, T data, ProblemDetail error) {
 
     public ResponseEntity<?> toResponseEntity(HttpStatusCode successStatus) {
         if (success) {
-            // 204 nie może mieć body
             if (successStatus.value() == HttpStatus.NO_CONTENT.value()) {
                 return ResponseEntity.noContent().build();
             }
@@ -39,8 +38,7 @@ public record ActionResult<T>(boolean success, T data, ProblemDetail error) {
         } else {
             ProblemDetail pd = (error != null) ? error : ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
 
-            // W Spring 6/Boot 3 getStatus() -> int. Zamień na HttpStatusCode.
-            int raw = pd.getStatus(); // prymitywny int – NIE porównuj do null
+            int raw = pd.getStatus();
             HttpStatusCode st = (raw > 0) ? HttpStatusCode.valueOf(raw) : HttpStatus.INTERNAL_SERVER_ERROR;
 
             return ResponseEntity.status(st).body(pd);

@@ -1,64 +1,83 @@
 package com.cmze.internal.service.stagesettings.strategy.impl;
 
 import com.cmze.entity.Stage;
+import com.cmze.entity.stagesettings.PublicVoteStage;
 import com.cmze.enums.StageType;
 import com.cmze.internal.service.stagesettings.strategy.StageSettingsStrategy;
-import com.cmze.repository.StagePublicConfigRepository;
-import com.cmze.request.CreateContestRequest;
-import com.cmze.request.stagesettings.PublicVotingSettingsRequest;
-import com.cmze.response.stagesettings.PublicVotingSettingsResponse;
+import com.cmze.repository.VoteMarkerRepository;
+import com.cmze.request.StageRequest;
+import com.cmze.request.UpdateStageRequest;
 import com.cmze.response.stagesettings.StageSettingsResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.stereotype.Component;
 
+import java.util.Map;
+import java.util.UUID;
+
+@Component
 public class PublicStageSettingsStrategy implements StageSettingsStrategy {
 
-    private final StagePublicConfigRepository publicRepo;
+    private final VoteMarkerRepository voteMarkerRepository;
 
-    public PublicStageSettingsStrategy(StagePublicConfigRepository publicRepo) {
-        this.publicRepo = publicRepo;
+    public PublicStageSettingsStrategy(final VoteMarkerRepository voteMarkerRepository) {
+        this.voteMarkerRepository  = voteMarkerRepository;
     }
 
-    @Override public StageType type() { return StageType.PUBLIC_VOTING; }
+    @Override
+    public StageType type() {
+        return StageType.PUBLIC_VOTE;
+    }
 
     @Override
-    public ProblemDetail validate(CreateContestRequest.StageRequest dto) {
-        var st = dto.getSettings();
-        if (st == null) return null; // dopuszczamy brak — użyjemy defaultów
-        if (!(st instanceof PublicVotingSettingsRequest ps)) {
-            return ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNPROCESSABLE_ENTITY,
-                    "settings must be PublicVotingSettings for PUBLIC_VOTING"
-            );
+    public ProblemDetail validate(final StageRequest dto) {
+        if (!(dto instanceof StageRequest.PublicStageRequest req)) {
+            return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid DTO for PUBLIC strategy");
         }
-        if (ps.getWeight() != null && ps.getWeight() <= 0.0) {
-            return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, "weight must be > 0");
+        if (req.getWeight() != null && req.getWeight() <= 0.0) {
+            return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, "Weight must be > 0");
         }
         return null;
     }
 
     @Override
-    public void apply(CreateContestRequest.StageRequest dto, Stage stage) {
-        double weight = 1.0;
-        var st = dto.getSettings();
-        if (st instanceof PublicVotingSettingsRequest ps && ps.getWeight() != null) {
-            weight = ps.getWeight();
+    public Stage createStage(final StageRequest dto) {
+        if (dto instanceof StageRequest.PublicStageRequest req) {
+            return PublicVoteStage.builder()
+                    .weight(req.getWeight())
+                    .maxScore(req.getMaxScore())
+                    .build();
         }
-        var cfg = new StagePublicConfig();
-        cfg.setStage(stage);       // @MapsId → użyje stage.id
-        cfg.setWeight(weight);
-        cfg.setMaxScore(1);        // kosmetycznie, logicznie ignorowane dla PUBLIC
-        publicRepo.save(cfg);
+        throw new IllegalArgumentException("Invalid DTO for PUBLIC strategy");
     }
 
     @Override
-    public StageSettingsResponse runStage(long stageId) {
-        var cfg = publicRepo.findById(stageId).orElseThrow(
-                () -> new IllegalStateException("Missing PUBLIC_VOTING config for stageId=" + stageId)
-        );
-        var r = new PublicVotingSettingsResponse();
-        r.setWeight(cfg.getWeight() <= 0 ? 1.0 : cfg.getWeight());
-        r.setMaxScore(cfg.getMaxScore() <= 0 ? 1 : cfg.getMaxScore());
-        return r;
+    public void updateStage(UpdateStageRequest dto, Stage stage) {
+
+    }
+
+    @Override
+    public StageSettingsResponse runStage(final long stageId) {
+//        return new StageSettingsResponse(stageId, "PUBLIC_VOTE", null);
+        return null;
+    }
+
+    @Override
+    public Map<UUID, Double> collectResults(final Stage stage) {
+//        if (!(stage instanceof PublicVoteStage publicStage)) {
+//            throw new IllegalStateException("Wrong stage type");
+//        }
+//
+//        final var votes = voteMarkerRepository.sumPointsByStageId(stage.getId());
+//
+//        final double weight = publicStage.getWeight();
+//
+//        return votes.stream()
+//                .collect(Collectors.toMap(
+//                        tuple -> tuple.getUserId(),
+//                        tuple -> tuple.getPoints() * weight
+//                ));
+//    }
+        return null;
     }
 }

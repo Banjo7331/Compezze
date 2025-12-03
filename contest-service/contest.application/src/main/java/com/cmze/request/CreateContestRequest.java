@@ -1,7 +1,7 @@
 package com.cmze.request;
 
 import com.cmze.enums.ContestCategory;
-import com.cmze.request.stages.StageRequest;
+import com.cmze.enums.SubmissionMediaPolicy;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -44,6 +44,8 @@ public class CreateContestRequest {
 
     @NotBlank(message = "A templateId must be selected.")
     private String templateId;
+
+    private SubmissionMediaPolicy submissionMediaPolicy;
 
     @Size(min = 1, max = 10)
     @Valid

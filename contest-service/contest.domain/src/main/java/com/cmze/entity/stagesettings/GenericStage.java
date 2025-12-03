@@ -1,6 +1,7 @@
 package com.cmze.entity.stagesettings;
 
 import com.cmze.entity.Stage;
+import com.cmze.enums.StageType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -17,4 +18,8 @@ import lombok.experimental.SuperBuilder;
 @Table(name = "stage_generic")
 @DiscriminatorValue("GENERIC")
 public class GenericStage extends Stage {
+    @Override
+    public StageType getType() {
+        return StageType.CUSTOM;
+    }
 }

@@ -9,8 +9,12 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("contest/{contestId}/submission")
@@ -28,48 +32,68 @@ public class SubmissionController {
         this.reviewSubmissionUseCase = reviewSubmissionUseCase;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> submitForContest(@PathVariable("contestId") String contestId,
-                                              @RequestPart(value = "name") String name,
-                                              @RequestHeader("X-User-Id") String userId,
-                                              @RequestPart("file") MultipartFile file
+    @PutMapping("/{submissionId}/review")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> reviewSubmission(
+            @PathVariable final Long contestId,
+            @PathVariable final String submissionId,
+            @RequestBody @Valid final ReviewSubmissionRequest request,
+            final Authentication authentication
     ) {
-        var result = submitEntryForContestUseCase.execute(contestId, userId, name, file);
+        final var reviewerId = (UUID) authentication.getPrincipal();
 
-        return result.toResponseEntity(HttpStatus.CREATED);
+        final var result = reviewSubmissionUseCase.execute(
+                contestId,
+                reviewerId,
+                submissionId,
+                request
+        );
+
+        return result.toResponseEntity(HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteSubmission(@PathVariable("contestId") String contestId,
-                                              @PathVariable("id") String submissionId,
-                                              @RequestHeader("X-User-Id") String requesterUserId) {
-        var res = deleteSubmissionUseCase.execute(contestId, requesterUserId, submissionId);
-        return res.toResponseEntity(HttpStatus.NO_CONTENT);
-    }
+//    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<?> submitForContest(@PathVariable("contestId") String contestId,
+//                                              @RequestPart(value = "name") String name,
+//                                              @RequestHeader("X-User-Id") String userId,
+//                                              @RequestPart("file") MultipartFile file
+//    ) {
+//        var result = submitEntryForContestUseCase.execute(contestId, userId, name, file);
+//
+//        return result.toResponseEntity(HttpStatus.CREATED);
+//    }
+//
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<?> deleteSubmission(@PathVariable("contestId") String contestId,
+//                                              @PathVariable("id") String submissionId,
+//                                              @RequestHeader("X-User-Id") String requesterUserId) {
+//        var res = deleteSubmissionUseCase.execute(contestId, requesterUserId, submissionId);
+//        return res.toResponseEntity(HttpStatus.NO_CONTENT);
+//    }
 
-    @GetMapping
-    public ResponseEntity<?> list(@PathVariable String contestId,
-                                  @RequestParam(name = "status", defaultValue = "PENDING") SubmissionStatus status,
-                                  @RequestParam(defaultValue = "0") int page,
-                                  @RequestParam(defaultValue = "20") int size) {
-        var res = listSubmissionsForReviewUseCase.execute(contestId, status, page, size);
-        return res.toResponseEntity(HttpStatus.OK);
-    }
-
-    @GetMapping("/{id}/media-url")
-    public ResponseEntity<?> mediaUrl(@PathVariable String contestId,
-                                      @PathVariable String submissionId,
-                                      @RequestHeader("X-User-Id") String userId) {
-        var res = getSubmissionMediaUrlUseCase.execute(contestId, submissionId, userId);
-        return res.toResponseEntity(HttpStatus.OK);
-    }
-
-    @PostMapping("/{id}/review")
-    public ResponseEntity<?> review(@PathVariable("contestid") String contestId,
-                                    @PathVariable("id") String submissionId,
-                                    @RequestHeader("X-User-Id") String reviewerUserId,
-                                    @RequestBody @Valid ReviewSubmissionRequest body) {
-        var res = reviewSubmissionUseCase.execute(contestId, submissionId, reviewerUserId, body);
-        return res.toResponseEntity(HttpStatus.NO_CONTENT);
-    }
+//    @GetMapping
+//    public ResponseEntity<?> list(@PathVariable String contestId,
+//                                  @RequestParam(name = "status", defaultValue = "PENDING") SubmissionStatus status,
+//                                  @RequestParam(defaultValue = "0") int page,
+//                                  @RequestParam(defaultValue = "20") int size) {
+//        var res = listSubmissionsForReviewUseCase.execute(contestId, status, page, size);
+//        return res.toResponseEntity(HttpStatus.OK);
+//    }
+//
+//    @GetMapping("/{id}/media-url")
+//    public ResponseEntity<?> mediaUrl(@PathVariable String contestId,
+//                                      @PathVariable String submissionId,
+//                                      @RequestHeader("X-User-Id") String userId) {
+//        var res = getSubmissionMediaUrlUseCase.execute(contestId, submissionId, userId);
+//        return res.toResponseEntity(HttpStatus.OK);
+//    }
+//
+//    @PostMapping("/{id}/review")
+//    public ResponseEntity<?> review(@PathVariable("contestid") String contestId,
+//                                    @PathVariable("id") String submissionId,
+//                                    @RequestHeader("X-User-Id") String reviewerUserId,
+//                                    @RequestBody @Valid ReviewSubmissionRequest body) {
+//        var res = reviewSubmissionUseCase.execute(contestId, submissionId, reviewerUserId, body);
+//        return res.toResponseEntity(HttpStatus.NO_CONTENT);
+//    }
 }

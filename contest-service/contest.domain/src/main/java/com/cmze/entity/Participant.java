@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Set;
 
 @Getter
@@ -54,11 +55,11 @@ public class Participant {
     @Column(name = "avatar_key", length = 120)
     private String avatarKey;
 
-    @ElementCollection(fetch = FetchType.EAGER, targetClass = ContestRole.class)
+    @ElementCollection(fetch = FetchType.EAGER) // Eager, bo często sprawdzamy uprawnienia
     @CollectionTable(name = "participant_roles", joinColumns = @JoinColumn(name = "participant_id"))
-    @Column(name = "role", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    private Set<ContestRole> roles = EnumSet.noneOf(ContestRole.class);
+    @Column(name = "role")
+    private Set<ContestRole> roles = new HashSet<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

@@ -2,6 +2,7 @@ package com.cmze.entity.stagesettings;
 
 import com.cmze.entity.Stage;
 import com.cmze.enums.JuryRevealMode;
+import com.cmze.enums.StageType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,7 +15,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @Entity
 @Table(name = "stage_jury")
-@DiscriminatorValue("JURY_VOTE") // Mówi Hibernate, że jeśli type='JURY_VOTE', to jest to ta klasa
+@DiscriminatorValue("JURY_VOTE")
 public class JuryVoteStage extends Stage {
 
     @Column(nullable = false)
@@ -29,4 +30,9 @@ public class JuryVoteStage extends Stage {
 
     @Column(nullable = false)
     private boolean showJudgeNames = true;
+
+    @Override
+    public StageType getType() {
+        return StageType.JURY_VOTE;
+    }
 }

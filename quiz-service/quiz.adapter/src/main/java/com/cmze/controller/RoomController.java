@@ -1,9 +1,6 @@
 package com.cmze.controller;
 
-import com.cmze.request.CreateQuizRoomRequest;
-import com.cmze.request.GenerateRoomInvitesRequest;
-import com.cmze.request.JoinQuizRoomRequest;
-import com.cmze.request.SubmitQuizAnswerRequest;
+import com.cmze.request.*;
 import com.cmze.usecase.room.*;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +26,7 @@ public class RoomController {
     private final FinishCurrentQuestionUseCase finishCurrentQuestionUseCase;
     private final CloseQuizRoomUseCase closeQuizRoomUseCase;
     private final InviteUsersForQuizRoomUseCase inviteUsersForQuizRoomUseCase;
+    private final GenerateTokenForUserUseCase generateTokenForUserUseCase;
     private final GetQuizRoomDetailsUseCase getQuizRoomDetailsUseCase;
     private final GetMyQuizRoomsResultsUseCase getMyQuizRoomsResultsUseCase;
     private final GetAllActiveQuizRoomsUseCase getAllActiveQuizRoomsUseCase;
@@ -41,6 +39,7 @@ public class RoomController {
                           final FinishCurrentQuestionUseCase finishCurrentQuestionUseCase,
                           final CloseQuizRoomUseCase closeQuizRoomUseCase,
                           final InviteUsersForQuizRoomUseCase inviteUsersForQuizRoomUseCase,
+                          final GenerateTokenForUserUseCase generateTokenForUserUseCase,
                           final GetQuizRoomDetailsUseCase getQuizRoomDetailsUseCase,
                           final GetMyQuizRoomsResultsUseCase getMyQuizRoomsResultsUseCase,
                           final GetAllActiveQuizRoomsUseCase getAllActiveQuizRoomsUseCase) {
@@ -52,6 +51,7 @@ public class RoomController {
         this.finishCurrentQuestionUseCase = finishCurrentQuestionUseCase;
         this.closeQuizRoomUseCase = closeQuizRoomUseCase;
         this.inviteUsersForQuizRoomUseCase = inviteUsersForQuizRoomUseCase;
+        this.generateTokenForUserUseCase = generateTokenForUserUseCase;
         this.getQuizRoomDetailsUseCase = getQuizRoomDetailsUseCase;
         this.getMyQuizRoomsResultsUseCase = getMyQuizRoomsResultsUseCase;
         this.getAllActiveQuizRoomsUseCase = getAllActiveQuizRoomsUseCase;
@@ -158,6 +158,18 @@ public class RoomController {
         final var result = inviteUsersForQuizRoomUseCase.execute(roomId, request, hostId);
 
         return result.toResponseEntity(HttpStatus.CREATED);
+    }
+
+    @PostMapping("/{roomId}/generate-token")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> generateTokenForUser(
+            @PathVariable final UUID roomId,
+            @RequestBody @Valid final GenerateSessionTokenRequest request
+    ) {
+
+        final var result = generateTokenForUserUseCase.execute(roomId, request);
+
+        return result.toResponseEntity(HttpStatus.OK);
     }
 
     @GetMapping("/{roomId}")

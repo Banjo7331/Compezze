@@ -1,6 +1,5 @@
 package com.cmze.response.stagesettings;
 
-import com.cmze.request.stagesettings.StageSettingsRequest;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import lombok.Getter;

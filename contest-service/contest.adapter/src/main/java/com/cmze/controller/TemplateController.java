@@ -24,61 +24,61 @@ public class TemplateController {
         this.uploadTemplateUseCase = uploadTemplateUseCase;
     }
 
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadTemplate(
-            @RequestPart("file") MultipartFile file,
-            @RequestHeader("X-Authenticated-User") String username,
-            @RequestHeader("X-User-Roles") String roles)
-    {
-        if (roles == null || !roles.contains("ROLE_ADMIN")) {
-            ProblemDetail pd = ProblemDetail.forStatusAndDetail(
-                    HttpStatus.FORBIDDEN, "Access Denied. Admin role required."
-            );
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
-        }
-        ActionResult<MediaLocation> result = uploadTemplateUseCase.execute(file, username);
-
-        if (!result.isSuccess()) {
-            return ResponseEntity
-                    .status(result.getError().getStatus())
-                    .body(result.getError());
-        }
-        return ResponseEntity.status(HttpStatus.CREATED).body(result.getValue());
-    }
-
-    @GetMapping
-    public ResponseEntity<?> listTemplates() { // Changed to wildcard ? to handle ActionResult
-        ActionResult<List<TemplateResponse>> result = listTemplatesUseCase.execute();
-
-        if (!result.isSuccess()) {
-            return ResponseEntity
-                    .status(result.getError().getStatus())
-                    .body(result.getError());
-        }
-        return ResponseEntity.ok(result.getValue());
-    }
-
-    @DeleteMapping
-    public ResponseEntity<?> deleteTemplate(
-            @RequestParam("key") String templateKey,
-            @RequestHeader("X-User-Roles") String roles) {
-
-        // 1. Manual Authorization
-        if (roles == null || !roles.contains("ROLE_ADMIN")) {
-            ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Access Denied. Admin role required.");
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
-        }
-
-        // 2. Execute Use Case
-        ActionResult<String> result = deleteTemplateUseCase.execute(templateKey);
-
-        // 3. Return Response
-        if (!result.isSuccess()) {
-            return ResponseEntity
-                    .status(result.getError().getStatus())
-                    .body(result.getError());
-        }
-        // HTTP 204 No Content is standard for a successful DELETE
-        return ResponseEntity.noContent().build();
-    }
+//    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<?> uploadTemplate(
+//            @RequestPart("file") MultipartFile file,
+//            @RequestHeader("X-Authenticated-User") String username,
+//            @RequestHeader("X-User-Roles") String roles)
+//    {
+//        if (roles == null || !roles.contains("ROLE_ADMIN")) {
+//            ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+//                    HttpStatus.FORBIDDEN, "Access Denied. Admin role required."
+//            );
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
+//        }
+//        ActionResult<MediaLocation> result = uploadTemplateUseCase.execute(file, username);
+//
+//        if (!result.isSuccess()) {
+//            return ResponseEntity
+//                    .status(result.getError().getStatus())
+//                    .body(result.getError());
+//        }
+//        return ResponseEntity.status(HttpStatus.CREATED).body(result.getValue());
+//    }
+//
+//    @GetMapping
+//    public ResponseEntity<?> listTemplates() { // Changed to wildcard ? to handle ActionResult
+//        ActionResult<List<TemplateResponse>> result = listTemplatesUseCase.execute();
+//
+//        if (!result.isSuccess()) {
+//            return ResponseEntity
+//                    .status(result.getError().getStatus())
+//                    .body(result.getError());
+//        }
+//        return ResponseEntity.ok(result.getValue());
+//    }
+//
+//    @DeleteMapping
+//    public ResponseEntity<?> deleteTemplate(
+//            @RequestParam("key") String templateKey,
+//            @RequestHeader("X-User-Roles") String roles) {
+//
+//        // 1. Manual Authorization
+//        if (roles == null || !roles.contains("ROLE_ADMIN")) {
+//            ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Access Denied. Admin role required.");
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(pd);
+//        }
+//
+//        // 2. Execute Use Case
+//        ActionResult<String> result = deleteTemplateUseCase.execute(templateKey);
+//
+//        // 3. Return Response
+//        if (!result.isSuccess()) {
+//            return ResponseEntity
+//                    .status(result.getError().getStatus())
+//                    .body(result.getError());
+//        }
+//        // HTTP 204 No Content is standard for a successful DELETE
+//        return ResponseEntity.noContent().build();
+//    }
 }

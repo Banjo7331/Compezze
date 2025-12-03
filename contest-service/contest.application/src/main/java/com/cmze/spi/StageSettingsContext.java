@@ -2,12 +2,18 @@ package com.cmze.spi;
 
 import com.cmze.entity.Stage;
 import com.cmze.enums.StageType;
-import com.cmze.request.CreateContestRequest;
+import com.cmze.request.StageRequest;
+import com.cmze.request.UpdateStageRequest;
 import com.cmze.response.stagesettings.StageSettingsResponse;
 import org.springframework.http.ProblemDetail;
 
+import java.util.Map;
+import java.util.UUID;
+
 public interface StageSettingsContext {
-    ProblemDetail validate(CreateContestRequest.StageRequest dto);
-    void apply(CreateContestRequest.StageRequest dto, Stage stage);
+    ProblemDetail validate(StageRequest dto);
+    Stage createStage(StageRequest dto);
+    void updateStage(UpdateStageRequest dto, Stage stage);
     StageSettingsResponse runStage(long stageId, StageType type);
+    Map<UUID, Double> collectResults(Stage stage);
 }

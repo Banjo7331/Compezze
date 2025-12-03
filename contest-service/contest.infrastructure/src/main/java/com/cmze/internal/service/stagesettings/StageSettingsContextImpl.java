@@ -3,7 +3,8 @@ package com.cmze.internal.service.stagesettings;
 import com.cmze.entity.Stage;
 import com.cmze.enums.StageType;
 import com.cmze.internal.service.stagesettings.strategy.StageSettingsStrategy;
-import com.cmze.request.CreateContestRequest;
+import com.cmze.request.StageRequest;
+import com.cmze.request.UpdateStageRequest;
 import com.cmze.response.stagesettings.StageSettingsResponse;
 import com.cmze.spi.StageSettingsContext;
 import org.springframework.http.ProblemDetail;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,24 +28,49 @@ public class StageSettingsContextImpl implements StageSettingsContext {
                         (a,b)->a, () -> new EnumMap<>(StageType.class)));
     }
     @Override
-    public ProblemDetail validate(CreateContestRequest.StageRequest dto) {
-        var s = byType.get(dto.getType());
-        return (s == null) ? null : s.validate(dto);
+    public ProblemDetail validate(final StageRequest dto) {
+        final var strategy = byType.get(dto.getType());
+        return (strategy == null) ? null : strategy.validate(dto);
     }
 
     @Override
-    public void apply(CreateContestRequest.StageRequest dto, Stage stage) {
-        var s = byType.get(dto.getType());
-        if (s != null) s.apply(dto, stage);
+    public Stage createStage(final StageRequest dto) {
+        final var strategy = byType.get(dto.getType());
+
+        if (strategy == null) {
+            throw new IllegalStateException("No strategy found for stage type: " + dto.getType());
+        }
+
+        return strategy.createStage(dto);
     }
 
     @Override
-    public StageSettingsResponse runStage(long stageId, StageType type) {
-        var s = byType.get(type);
-        if (s == null) {
+    public void updateStage(final UpdateStageRequest dto, final Stage stage) {
+        final var strategy = byType.get(stage.getType());
+
+        if (strategy == null) {
+            throw new IllegalStateException("No strategy found for stage type: " + stage.getType());
+        }
+
+        strategy.updateStage(dto, stage);
+    }
+
+    @Override
+    public StageSettingsResponse runStage(final long stageId, final StageType type) {
+        final var strategy = byType.get(type);
+        if (strategy == null) {
             throw new IllegalStateException("No strategy for type: " + type);
         }
-        return s.runStage(stageId);
+        return strategy.runStage(stageId);
+    }
+
+    @Override
+    public Map<UUID, Double> collectResults(final Stage stage) {
+        final var strategy = byType.get(stage.getType());
+        if (strategy == null) {
+            return Map.of();
+        }
+        return strategy.collectResults(stage);
     }
 
 }

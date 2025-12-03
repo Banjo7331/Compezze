@@ -7,6 +7,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Optional;
+
 @Repository
 public class ContestRepositoryImpl implements ContestRepository{
 
@@ -18,9 +21,10 @@ public class ContestRepositoryImpl implements ContestRepository{
     }
 
     @Override
-    public Contest findById(Long id) {
-        return impl.findById(id).orElseThrow(()-> new RuntimeException("Contest not found"));
+    public Optional<Contest> findById(Long id) {
+        return impl.findById(id);
     }
+
 
     @Override
     public Page<Contest> findAll(Pageable pageable, Long quizId) {
@@ -29,7 +33,12 @@ public class ContestRepositoryImpl implements ContestRepository{
 
     @Override
     public Contest save(Contest contest) {
-        return null;
+        return impl.save(contest);
+    }
+
+    @Override
+    public List<Contest> findUpcomingForUser(String userId, Pageable pageable) {
+        return impl.findUpcomingForUser(userId, pageable);
     }
 
 }

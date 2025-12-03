@@ -38,33 +38,33 @@ public class GetSubmissionMediaUrlUseCase {
         this.minio = minio;
     }
 
-    @Transactional
-    public ActionResult<GetSubmissionMediaUrlResponse> execute(String contestId, String submissionId, String userId) {
-
-        // 1) autoryzacja: user musi być uczestnikiem TEGO konkursu
-        Participant participant = participantRepo.findsByContestIdAndUserId(contestId, userId);
-        if (participant == null) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.FORBIDDEN,"Not a participant of this contest."));
-        }
-
-        // 2) wczytaj submission i upewnij się, że należy do tego konkursu
-        Submission submission = submissionRepo.findById(submissionId);
-        if (submission == null){
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.NOT_FOUND,"Submission not found."));
-        }
-        String objectKey = submission.getFile().getObjectKey();
-        URL presignedUrl = minio.presignGet(privateBucket, objectKey, presignedGetTtl);
-        int expiresInSec = (int) presignedGetTtl.getSeconds();
-
-        GetSubmissionMediaUrlResponse response = new GetSubmissionMediaUrlResponse(
-                presignedUrl.toString(),
-                expiresInSec,
-                submission.getFile().getContentType(),
-                submission.getFile().getSize(),
-                submission.getOriginalFilename()
-        );
-        return ActionResult.success(response);
-    }
+//    @Transactional
+//    public ActionResult<GetSubmissionMediaUrlResponse> execute(String contestId, String submissionId, String userId) {
+//
+//        // 1) autoryzacja: user musi być uczestnikiem TEGO konkursu
+//        Participant participant = participantRepo.findsByContestIdAndUserId(contestId, userId);
+//        if (participant == null) {
+//            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
+//                    HttpStatus.FORBIDDEN,"Not a participant of this contest."));
+//        }
+//
+//        // 2) wczytaj submission i upewnij się, że należy do tego konkursu
+//        Submission submission = submissionRepo.findById(submissionId);
+//        if (submission == null){
+//            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
+//                    HttpStatus.NOT_FOUND,"Submission not found."));
+//        }
+//        String objectKey = submission.getFile().getObjectKey();
+//        URL presignedUrl = minio.presignGet(privateBucket, objectKey, presignedGetTtl);
+//        int expiresInSec = (int) presignedGetTtl.getSeconds();
+//
+//        GetSubmissionMediaUrlResponse response = new GetSubmissionMediaUrlResponse(
+//                presignedUrl.toString(),
+//                expiresInSec,
+//                submission.getFile().getContentType(),
+//                submission.getFile().getSize(),
+//                submission.getOriginalFilename()
+//        );
+//        return ActionResult.success(response);
+//    }
 }

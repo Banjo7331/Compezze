@@ -6,6 +6,6 @@ import com.cmze.request.VoteCommand;
 import com.cmze.shared.ActionResult;
 
 public interface VotingStrategy {
-    StageType type();
-    ActionResult<Void> submit(Stage stage, String userId, VoteCommand cmd);
+//    StageType type();
+//    ActionResult<Void> submit(Stage stage, String userId, VoteCommand cmd);
 }

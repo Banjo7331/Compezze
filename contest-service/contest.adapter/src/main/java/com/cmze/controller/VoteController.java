@@ -17,12 +17,12 @@ public class VoteController {
         this.voteUseCase = voteUseCase;
     }
 
-    @PostMapping("/stages/{stageId}/vote")
-    public ResponseEntity<?> voteForStage(@PathVariable String contestId,
-                                          @PathVariable Long stageId,
-                                          @AuthenticationPrincipal(expression = "name") String userId,
-                                          @RequestBody VoteCommand cmd) {
-        var result = voteUseCase.execute(contestId, stageId, userId, cmd);
-        return result.toResponseEntity(HttpStatus.OK);
-    }
+//    @PostMapping("/stages/{stageId}/vote")
+//    public ResponseEntity<?> voteForStage(@PathVariable String contestId,
+//                                          @PathVariable Long stageId,
+//                                          @AuthenticationPrincipal(expression = "name") String userId,
+//                                          @RequestBody VoteCommand cmd) {
+//        var result = voteUseCase.execute(contestId, stageId, userId, cmd);
+//        return result.toResponseEntity(HttpStatus.OK);
+//    }
 }

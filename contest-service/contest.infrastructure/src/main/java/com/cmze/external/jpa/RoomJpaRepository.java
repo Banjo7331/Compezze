@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface RoomJpaRepository extends JpaRepository<Room, String> {
-    Optional<Room> findByContest_Id(String contestId);
+    Optional<Room> findByContest_Id(Long contestId);
     Optional<Room> findByRoomKey(String roomKey);
     boolean existsByRoomKey(String roomKey);
 }

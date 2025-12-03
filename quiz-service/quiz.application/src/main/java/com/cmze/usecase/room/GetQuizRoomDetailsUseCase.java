@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -87,12 +88,16 @@ public class GetQuizRoomDetailsUseCase {
     private GetCurrentQuestionResponse resolveCurrentQuestion(final QuizRoom room) {
         if (room.getStatus() == QuizRoomStatus.QUESTION_ACTIVE && room.getCurrentQuestionIndex() >= 0) {
             final var qEntity = room.getQuiz().getQuestions().get(room.getCurrentQuestionIndex());
-            return mapToCurrentQuestionDto(qEntity, room.getCurrentQuestionStartTime(), room.getCurrentQuestionIndex());
+            return mapToCurrentQuestionDto(qEntity,
+                                           room.getCurrentQuestionStartTime(),
+                                           room.getTimePerQuestion(),
+                                           room.getCurrentQuestionIndex()
+            );
         }
         return null;
     }
 
-    private GetCurrentQuestionResponse mapToCurrentQuestionDto(Question q, java.time.LocalDateTime startTime, int index) {
+    private GetCurrentQuestionResponse mapToCurrentQuestionDto(Question q, LocalDateTime startTime, int timeLimit, int index) {
         final var options = q.getOptions().stream()
                 .map(o -> new GetQuestionOptionResponse(o.getId(), o.getText()))
                 .collect(Collectors.toList());
@@ -102,6 +107,7 @@ public class GetQuizRoomDetailsUseCase {
                 index,
                 q.getTitle(),
                 startTime,
+                timeLimit,
                 options
         );
     }

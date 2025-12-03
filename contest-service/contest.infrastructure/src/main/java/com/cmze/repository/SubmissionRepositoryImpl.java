@@ -2,21 +2,33 @@ package com.cmze.repository;
 
 import com.cmze.entity.Submission;
 import com.cmze.enums.SubmissionStatus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.cmze.external.jpa.SubmissionJpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public class SubmissionRepositoryImpl implements SubmissionRepository {
-    @Override
-    public Page<Submission> findByContest_IdAndStatus(String contestId, SubmissionStatus status, Pageable pageable) {
-        return null;
+
+    private final SubmissionJpaRepository impl;
+
+    public SubmissionRepositoryImpl(SubmissionJpaRepository impl) {
+        this.impl = impl;
     }
 
     @Override
-    public Optional<Submission> findByIdAndContest_Id(String submissionId, String contestId) {
+    public Optional<Submission> findByIdAndContest_Id(String submissionId, Long contestId) {
         return Optional.empty();
+    }
+
+    @Override
+    public List<Submission> findAllByContest_IdAndStatus(Long contestId, SubmissionStatus status) {
+        return impl.findAllByContest_IdAndStatus(contestId, status);
+    }
+
+    @Override
+    public Submission save(Submission submission) {
+        return impl.save(submission);
     }
 }

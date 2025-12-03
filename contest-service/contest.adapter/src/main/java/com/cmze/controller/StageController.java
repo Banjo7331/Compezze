@@ -7,36 +7,52 @@ import com.cmze.usecase.contest.UpdateStageUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
-@RequestMapping("contest/{contestId}/stages")
+@RequestMapping("contest/{contestId}")
 public class StageController {
 
-    private final ReorderContestStagesUseCase reorderStagesUseCase;
     private final UpdateStageUseCase updateStageUseCase;
+    private final ReorderContestStagesUseCase reorderContestStagesUseCase;
 
-    public StageController(ReorderContestStagesUseCase reorderStagesUseCase,
+    public StageController(ReorderContestStagesUseCase reorderContestStagesUseCase,
                            UpdateStageUseCase updateStageUseCase
     ) {
-        this.reorderStagesUseCase = reorderStagesUseCase;
+        this.reorderContestStagesUseCase = reorderContestStagesUseCase;
         this.updateStageUseCase = updateStageUseCase;
     }
 
-    @PutMapping("/reorder")
-    public ResponseEntity<?> reorderContestStages(@PathVariable String contestId,
-                                     @RequestHeader("X-User-Id") String organizerId,
-                                     @Valid @RequestBody ReorderStagesRequest request) {
-        var result = reorderStagesUseCase.execute(contestId, organizerId, request);
-        return result.toResponseEntity(HttpStatus.NO_CONTENT);
+    @PutMapping("/stage/{stageId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updateStage(
+            @PathVariable final Long contestId,
+            @PathVariable final Long stageId,
+            @RequestBody @Valid final UpdateStageRequest request,
+            final Authentication authentication
+    ) {
+        final var organizerId = (UUID) authentication.getPrincipal();
+
+        final var result = updateStageUseCase.execute(contestId, stageId, organizerId, request);
+
+        return result.toResponseEntity(HttpStatus.OK);
     }
 
-    @PatchMapping("/{stageId}")
-    public ResponseEntity<?> updateStage(@PathVariable String contestId,
-                                         @PathVariable Long stageId,
-                                         @RequestHeader("X-User-Id") String organizerId,
-                                         @Valid @RequestBody UpdateStageRequest request) {
-        var result = updateStageUseCase.execute(contestId, stageId, organizerId, request);
-        return result.toResponseEntity(HttpStatus.OK);
+    @PatchMapping("/stages/reorder")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> reorderStages(
+            @PathVariable final Long contestId,
+            @RequestBody @Valid final ReorderStagesRequest request,
+            final Authentication authentication
+    ) {
+        final var organizerId = (UUID) authentication.getPrincipal();
+
+        final var result = reorderContestStagesUseCase.execute(contestId, request, organizerId);
+
+        return result.toResponseEntity(HttpStatus.NO_CONTENT);
     }
 }

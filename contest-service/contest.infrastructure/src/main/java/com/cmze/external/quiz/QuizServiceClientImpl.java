@@ -1,14 +1,19 @@
 package com.cmze.external.quiz;
 
-import com.cmze.spi.quiz.QuizRoomDto;
 import com.cmze.spi.quiz.QuizServiceClient;
+import com.cmze.spi.quiz.dto.CreateQuizRoomRequest;
+import com.cmze.spi.quiz.dto.CreateQuizRoomResponse;
+import com.cmze.spi.quiz.dto.GenerateQuizTokenRequest;
+import com.cmze.spi.quiz.dto.GenerateQuizTokenResponse;
 import feign.FeignException;
-import org.springframework.http.ResponseEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class QuizServiceClientImpl implements QuizServiceClient {
 
+    private static final Logger logger = LoggerFactory.getLogger(QuizServiceClientImpl.class);
     private final InternalQuizApi internalApi;
 
     public QuizServiceClientImpl(InternalQuizApi internalApi) {
@@ -16,14 +21,38 @@ public class QuizServiceClientImpl implements QuizServiceClient {
     }
 
     @Override
-    public QuizRoomDto createRoom(Long quizFormId, int maxUsers) {
+    public CreateQuizRoomResponse createRoom(CreateQuizRoomRequest request) {
         try {
-            ResponseEntity<QuizRoomDto> response = internalApi.createRoom(quizFormId, maxUsers);
-            return response.getBody();
+            logger.info("Calling QuizService to create room for form: {}", request.getQuizFormId());
+            return internalApi.createRoom(request);
+
         } catch (FeignException.BadRequest | FeignException.NotFound ex) {
-            throw new RuntimeException("Failed to create quiz room: " + ex.getMessage(), ex);
+            logger.error("Client error creating quiz room: {}", ex.getMessage());
+            throw new RuntimeException("Invalid request to Quiz Service: " + ex.getMessage(), ex);
         } catch (Exception e) {
-            throw new RuntimeException("Quiz service is unavailable or failed: " + e.getMessage(), e);
+            logger.error("Quiz service unavailable or failed: {}", e.getMessage());
+            throw new RuntimeException("Quiz service is unavailable", e);
         }
     }
+
+    @Override
+    public GenerateQuizTokenResponse generateToken(String roomId, GenerateQuizTokenRequest request) {
+        try {
+            return internalApi.generateToken(roomId, request);
+        } catch (Exception e) {
+            logger.error("Failed to generate token via Quiz Service for room {}", roomId, e);
+            throw new RuntimeException("Failed to generate access token", e);
+        }
+    }
+
+//    @Override
+//    public Get getRoomDetails(String roomId) {
+//        try {
+//            return internalApi.getRoomDetails(roomId);
+//        } catch (Exception e) {
+//            logger.error("Failed to get room details for {}", roomId, e);
+//            // Tu można zwrócić null lub rzucić wyjątek, zależnie od strategii
+//            throw new RuntimeException("Failed to fetch quiz results", e);
+//        }
+//    }
 }

@@ -26,14 +26,14 @@ public class ListSubmissionsForReviewUseCase {
         this.minioService = minioService;
     }
 
-    @Transactional
-    public ActionResult<Page<GetSubmissionResponse>> execute(String contestId,
-                                                             SubmissionStatus status,
-                                                             int page, int size) {
-        var pageable = PageRequest.of(Math.max(0,page), Math.max(1,size), Sort.by("id").descending());
-        Page<GetSubmissionResponse> result = submissionRepo
-                .findByContest_IdAndStatus(contestId, status, pageable)
-                .map(s -> modelMapper.map(s, GetSubmissionResponse.class));
-        return ActionResult.success(result);
-    }
+//    @Transactional
+//    public ActionResult<Page<GetSubmissionResponse>> execute(Long contestId,
+//                                                             SubmissionStatus status,
+//                                                             int page, int size) {
+//        var pageable = PageRequest.of(Math.max(0,page), Math.max(1,size), Sort.by("id").descending());
+//        Page<GetSubmissionResponse> result = submissionRepo
+//                .findByContest_IdAndStatus(contestId, status, pageable)
+//                .map(s -> modelMapper.map(s, GetSubmissionResponse.class));
+//        return ActionResult.success(result);
+//    }
 }

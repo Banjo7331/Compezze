@@ -1,6 +1,5 @@
 package com.cmze.external.minio;
 
-import com.cmze.spi.minio.FileMetadata;
 import com.cmze.spi.minio.MinioService;
 import com.cmze.spi.minio.ObjectMetadata;
 import io.minio.*;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;

@@ -10,5 +10,5 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateContestResponse {
-    private String id;
+    private Long id;
 }

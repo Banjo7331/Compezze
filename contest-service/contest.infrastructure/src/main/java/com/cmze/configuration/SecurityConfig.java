@@ -1,7 +1,7 @@
 package com.cmze.configuration;
 
-import com.cmze.security.JwtAuthenticationEntryPoint;
-import com.cmze.security.JwtAuthenticationFilter;
+import com.cmze.security.auth.JwtAuthenticationEntryPoint;
+import com.cmze.security.auth.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -35,6 +35,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
                 );
 

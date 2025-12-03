@@ -1,86 +1,85 @@
 package com.cmze.usecase.contest;
 
-import com.cmze.entity.Contest;
 import com.cmze.entity.Participant;
-import com.cmze.enums.ContestRole;
+import com.cmze.enums.ContestStatus;
 import com.cmze.repository.ContestRepository;
 import com.cmze.repository.ParticipantRepository;
 import com.cmze.response.JoinContestResponse;
 import com.cmze.shared.ActionResult;
+import com.cmze.spi.identity.IdentityServiceClient;
 import com.cmze.usecase.UseCase;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @UseCase
 public class JoinContestUseCase {
 
+    private static final Logger logger = LoggerFactory.getLogger(JoinContestUseCase.class);
+
     private final ContestRepository contestRepository;
     private final ParticipantRepository participantRepository;
+    private final IdentityServiceClient identityClient;
 
-    public JoinContestUseCase(ContestRepository contestRepository,
-                              ParticipantRepository participantRepository) {
+    public JoinContestUseCase(final ContestRepository contestRepository,
+                              final ParticipantRepository participantRepository,
+                              final IdentityServiceClient identityClient) {
         this.contestRepository = contestRepository;
         this.participantRepository = participantRepository;
+        this.identityClient = identityClient;
     }
 
-    /**
-     * Dołącza użytkownika do konkursu jako Competitor.
-     * Idempotentne: jeśli użytkownik już jest uczestnikiem, zwraca sukces z istniejącym participantId.
-     */
     @Transactional
-    public ActionResult<JoinContestResponse> execute(String contestId, String userId) {
-        // --- 0) Walidacja wejścia ---
-        if (contestId == null || contestId.isBlank()) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.BAD_REQUEST, "contestId is required."));
-        }
-        if (userId == null || userId.isBlank()) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.BAD_REQUEST, "userId is required."));
-        }
+    public ActionResult<JoinContestResponse> execute(final Long contestId, final UUID userId) {
+        try {
 
-        // --- 1) Pobierz konkurs ---
-        Contest contest = contestRepository.findById(contestId);
-        if (contest == null) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.NOT_FOUND, "Contest not found."));
-        }
+            final var contestOpt = contestRepository.findById(contestId);
+            if (contestOpt.isEmpty()) return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, "Contest not found"));
+            final var contest = contestOpt.get();
 
-        // --- 2) Reguły biznesowe dołączenia ---
-        // Jeśli masz osobne okno zapisów – podmień warunki na dedykowane pola.
-        if (!contest.isOpen()) {
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.UNPROCESSABLE_ENTITY, "Contest is closed."));
-        }
-        LocalDateTime now = LocalDateTime.now();
+            if (contest.getStatus() == ContestStatus.DRAFT) return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Contest not in draft mode"));
 
-        // --- 3) Idempotencja: czy już jest uczestnikiem? ---
-        Participant existing = participantRepository.findsByContestIdAndUserId(contestId, userId);
-        if (existing != null) {
-            return ActionResult.success(new JoinContestResponse(existing.getId()));
-        }
+            final var existing = participantRepository.findByContestIdAndUserId(contestId, userId.toString());
+            if (existing.isPresent()) return ActionResult.success(new JoinContestResponse(existing.get().getId()));
 
-        // --- 4) Limit uczestników ---
-        if (contest.getParticipantLimit() != null && contest.getParticipantLimit() > 0) {
-            long currentParticipants = participantRepository.countByContestId(contestId);
-            if (currentParticipants >= contest.getParticipantLimit()) {
-                return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                        HttpStatus.CONFLICT, "Participant limit reached."));
+            if (contest.getParticipantLimit() != null && contest.getParticipantLimit() > 0) {
+                long currentCount = participantRepository.countByContest_Id(contestId);
+                if (currentCount >= contest.getParticipantLimit()) return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Contest is full"));
             }
+
+            String displayName = "Participant";
+            try {
+                final var userDto = identityClient.getUserById(userId);
+                if (userDto != null) {
+                    displayName = userDto.getUsername();
+                }
+            } catch (Exception e) {
+                logger.warn("Could not fetch user details for {}. Using fallback.", userId);
+                displayName = "User-" + userId.toString().substring(0, 8);
+            }
+
+            final var participant = new Participant();
+            participant.setContest(contest);
+            participant.setUserId(userId.toString());
+            participant.setDisplayName(displayName);
+            participant.setCreatedAt(LocalDateTime.now());
+
+            final var savedParticipant = participantRepository.save(participant);
+
+            logger.info("User {} ({}) joined contest {}", userId, displayName, contestId);
+
+            return ActionResult.success(new JoinContestResponse(savedParticipant.getId()));
+
+        } catch (Exception e) {
+            logger.error("Join failed", e);
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Join failed"));
         }
-
-        // --- 5) Utwórz uczestnika ---
-        Participant participant = new Participant();
-        participant.setContest(contest);
-        participant.setUserId(userId);
-        participant.setUpdatedAt(now);
-
-        Participant saved = participantRepository.save(participant);
-
-        // --- 6) Zwróć wynik ---
-        return ActionResult.success(new JoinContestResponse(saved.getId()));
     }
 }

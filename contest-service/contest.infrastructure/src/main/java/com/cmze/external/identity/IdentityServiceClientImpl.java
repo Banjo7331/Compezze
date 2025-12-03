@@ -5,6 +5,8 @@ import com.cmze.spi.identity.UserDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 public class IdentityServiceClientImpl implements IdentityServiceClient {
 
@@ -17,11 +19,16 @@ public class IdentityServiceClientImpl implements IdentityServiceClient {
     @Override
     public UserDto getUserByUsername(String username) {
         try {
-            ResponseEntity<UserDto> response = internalApi.fetchUserByUsername(username);
-            return response.getBody();
+            UserDto response = internalApi.fetchUserByUsername(username);
+            return response;
         } catch (Exception e) {
             throw new RuntimeException("Could not fetch user data for: " + username, e);
         }
+    }
+
+    @Override
+    public UserDto getUserById(UUID userId) {
+        return null;
     }
 
 }

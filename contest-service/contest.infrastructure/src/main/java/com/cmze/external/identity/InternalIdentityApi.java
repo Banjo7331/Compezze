@@ -3,9 +3,10 @@ package com.cmze.external.identity;
 import com.cmze.configuration.FeignConfig;
 import com.cmze.spi.identity.UserDto;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.UUID;
 
 @FeignClient(
         name = "auth-service",
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 )
 public interface InternalIdentityApi {
     @GetMapping("/{usernameOrEmail}")
-    ResponseEntity<UserDto> fetchUserByUsername(@PathVariable("usernameOrEmail") String username);
-
+    UserDto fetchUserByUsername(@PathVariable("usernameOrEmail") String username);
+    @GetMapping("/api/v1/users/{userId}")
+    UserDto getUserById(@PathVariable("userId") UUID userId);
 }

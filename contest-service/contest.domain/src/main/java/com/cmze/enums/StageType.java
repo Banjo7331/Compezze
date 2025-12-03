@@ -2,8 +2,8 @@ package com.cmze.enums;
 
 public enum StageType {
 //    SUBMISSIONS,
-    PUBLIC_VOTING,
-    JURY_VOTING,
+    PUBLIC_VOTE,
+    JURY_VOTE,
     SURVEY,
     QUIZ,
     CUSTOM

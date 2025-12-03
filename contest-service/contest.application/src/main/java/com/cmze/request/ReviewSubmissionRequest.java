@@ -1,19 +1,16 @@
 package com.cmze.request;
 
 import com.cmze.enums.SubmissionStatus;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class ReviewSubmissionRequest {
+
     @NotNull
     private SubmissionStatus status;
+
     private String comment;
 }

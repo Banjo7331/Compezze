@@ -14,14 +14,14 @@ public class VoteSubmissionUseCase {
     public VoteSubmissionUseCase(VotingContext votingContext) {
         this.votingContext = votingContext;
     }
-
-    @Transactional
-    public ActionResult<Void> execute(String contestId, Long stageId, String userId, VoteCommand cmd) {
-        if (stageId == null) {
-            return ActionResult.failure(org.springframework.http.ProblemDetail.forStatusAndDetail(
-                    org.springframework.http.HttpStatus.BAD_REQUEST, "stageId is required."));
-        }
-
-        return votingContext.submitForStage(contestId, stageId, userId, cmd);
-    }
+//
+//    @Transactional
+//    public ActionResult<Void> execute(String contestId, Long stageId, String userId, VoteCommand cmd) {
+//        if (stageId == null) {
+//            return ActionResult.failure(org.springframework.http.ProblemDetail.forStatusAndDetail(
+//                    org.springframework.http.HttpStatus.BAD_REQUEST, "stageId is required."));
+//        }
+//
+//        return votingContext.submitForStage(contestId, stageId, userId, cmd);
+//    }
 }
