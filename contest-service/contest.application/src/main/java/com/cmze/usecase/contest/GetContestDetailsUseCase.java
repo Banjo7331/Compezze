@@ -1,7 +1,9 @@
 package com.cmze.usecase.contest;
 
 import com.cmze.entity.Stage;
+import com.cmze.enums.ContestRole;
 import com.cmze.repository.ContestRepository;
+import com.cmze.repository.ParticipantRepository;
 import com.cmze.response.GetContestDetailsResponse;
 import com.cmze.response.GetStageDetailsResponse;
 import com.cmze.shared.ActionResult;
@@ -12,7 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @UseCase
@@ -21,17 +26,17 @@ public class GetContestDetailsUseCase {
     private static final Logger logger = LoggerFactory.getLogger(GetContestDetailsUseCase.class);
 
     private final ContestRepository contestRepository;
+    private final ParticipantRepository participantRepository;
 
-    public GetContestDetailsUseCase(final ContestRepository contestRepository) {
+    public GetContestDetailsUseCase(final ContestRepository contestRepository,
+                                    final ParticipantRepository participantRepository) {
         this.contestRepository = contestRepository;
+        this.participantRepository = participantRepository;
     }
 
     @Transactional(readOnly = true)
-    public ActionResult<GetContestDetailsResponse> execute(final String contestIdString) {
+    public ActionResult<GetContestDetailsResponse> execute(final Long contestId, final UUID userId) {
         try {
-            // 1. Pobranie Konkursu
-            Long contestId = Long.valueOf(contestIdString);
-
             final var contestOpt = contestRepository.findById(contestId);
             if (contestOpt.isEmpty()) {
                 return ActionResult.failure(ProblemDetail.forStatusAndDetail(
@@ -40,7 +45,16 @@ public class GetContestDetailsUseCase {
             }
             final var contest = contestOpt.get();
 
-            // 2. Mapowanie Etapów (Plan)
+            boolean isOrganizer = contest.getOrganizerId().equals(userId.toString());
+
+            final var participantOpt = participantRepository.findByContestIdAndUserId(contestId, userId.toString());
+
+            boolean isParticipant = participantOpt.isPresent();
+
+            Set<ContestRole> myRoles = isParticipant ? participantOpt.get().getRoles() : Collections.emptySet();
+
+            long currentParticipantsCount = participantRepository.countByContest_Id(contestId);
+
             final var stagesDto = contest.getStages().stream()
                     .sorted(Comparator.comparingInt(Stage::getPosition))
                     .map(s -> new GetStageDetailsResponse(
@@ -52,7 +66,8 @@ public class GetContestDetailsUseCase {
                     ))
                     .collect(Collectors.toList());
 
-            // 3. Budowanie Response (Czysta definicja)
+
+
             final var response = new GetContestDetailsResponse(
                     contest.getId().toString(),
                     contest.getName(),
@@ -64,6 +79,10 @@ public class GetContestDetailsUseCase {
                     contest.getStatus(),
                     contest.getParticipantLimit() != null ? contest.getParticipantLimit() : 0,
                     contest.isPrivate(),
+                    currentParticipantsCount,
+                    isOrganizer,
+                    isParticipant,
+                    myRoles,
                     stagesDto
             );
 
@@ -72,7 +91,7 @@ public class GetContestDetailsUseCase {
         } catch (NumberFormatException e) {
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Invalid ID format"));
         } catch (Exception e) {
-            logger.error("Failed to get contest details {}", contestIdString, e);
+            logger.error("Failed to get contest details {}", contestId, e);
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Error"));
         }
     }

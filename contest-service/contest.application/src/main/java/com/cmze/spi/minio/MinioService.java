@@ -21,6 +21,8 @@ public interface MinioService {
     URL getPresignedUrlForDisplay(String bucket, String objectKey, Duration expiry);
 
     List<String> listObjectKeys(String bucket, String prefix);
+
+    List<String> listFiles(String bucket, String prefix);
 }
 
 

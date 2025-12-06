@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import java.io.InputStream;
 import java.net.URL;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -137,6 +139,33 @@ public class MinioServiceImpl implements MinioService { // Implements the correc
         } catch (Exception e) {
             logger.error("Error listing objects in MinIO: bucket={}, prefix={}", bucket, prefix, e);
             throw new RuntimeException("File listing failed for: " + bucket + "/" + prefix, e);
+        }
+    }
+
+    @Override
+    public List<String> listFiles(String bucket, String prefix) {
+        try {
+            Iterable<Result<Item>> results = client.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(bucket)
+                            .prefix(prefix)
+                            .recursive(false)
+                            .build()
+            );
+
+            List<String> fileNames = new ArrayList<>();
+            for (Result<Item> result : results) {
+                String objectName = result.get().objectName();
+
+                String fileName = objectName.replace(prefix, "");
+                if (!fileName.isBlank()) {
+                    fileNames.add(fileName);
+                }
+            }
+            return fileNames;
+        } catch (Exception e) {
+            logger.error("Error listing files in MinIO", e);
+            return Collections.emptyList();
         }
     }
 

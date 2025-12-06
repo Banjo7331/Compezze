@@ -20,6 +20,6 @@ import lombok.experimental.SuperBuilder;
 public class GenericStage extends Stage {
     @Override
     public StageType getType() {
-        return StageType.CUSTOM;
+        return StageType.GENERIC;
     }
 }

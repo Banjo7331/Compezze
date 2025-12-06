@@ -2,10 +2,15 @@ package com.cmze.controller;
 
 import com.cmze.enums.SubmissionStatus;
 import com.cmze.request.ReviewSubmissionRequest;
+import com.cmze.usecase.participant.WithdrawSubmissionUseCase;
+import com.cmze.usecase.submission.GetSubmissionMediaUrlUseCase;
+import com.cmze.usecase.submission.ListSubmissionsForReviewUseCase;
 import com.cmze.usecase.submission.ReviewSubmissionUseCase;
 import com.cmze.usecase.participant.SubmitEntryForContestUseCase;
 import com.cmze.usecase.submission.DeleteSubmissionUseCase;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,15 +26,24 @@ import java.util.UUID;
 public class SubmissionController {
 
     private final SubmitEntryForContestUseCase submitEntryForContestUseCase;
+    private final WithdrawSubmissionUseCase withdrawSubmissionUseCase;
     private final DeleteSubmissionUseCase deleteSubmissionUseCase;
     private final ReviewSubmissionUseCase reviewSubmissionUseCase;
+    private final ListSubmissionsForReviewUseCase listSubmissionsForReviewUseCase;
+    private final GetSubmissionMediaUrlUseCase getSubmissionMediaUrlUseCase;
 
     public SubmissionController(SubmitEntryForContestUseCase submitEntryForContestUseCase,
+                                WithdrawSubmissionUseCase withdrawSubmissionUseCase,
                                 DeleteSubmissionUseCase deleteSubmissionUseCase,
-                                ReviewSubmissionUseCase reviewSubmissionUseCase) {
+                                ReviewSubmissionUseCase reviewSubmissionUseCase,
+                                ListSubmissionsForReviewUseCase listSubmissionsForReviewUseCase,
+                                GetSubmissionMediaUrlUseCase getSubmissionMediaUrlUseCase) {
         this.submitEntryForContestUseCase = submitEntryForContestUseCase;
+        this.withdrawSubmissionUseCase = withdrawSubmissionUseCase;
         this.deleteSubmissionUseCase = deleteSubmissionUseCase;
         this.reviewSubmissionUseCase = reviewSubmissionUseCase;
+        this.listSubmissionsForReviewUseCase = listSubmissionsForReviewUseCase;
+        this.getSubmissionMediaUrlUseCase = getSubmissionMediaUrlUseCase;
     }
 
     @PutMapping("/{submissionId}/review")
@@ -50,6 +64,62 @@ public class SubmissionController {
         );
 
         return result.toResponseEntity(HttpStatus.OK);
+    }
+
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getSubmissions(
+            @PathVariable Long contestId,
+            @RequestParam(required = false) SubmissionStatus status,
+            @PageableDefault(size = 20) Pageable pageable,
+            Authentication authentication
+    ) {
+        var userId = (UUID) authentication.getPrincipal();
+        var result = listSubmissionsForReviewUseCase.execute(contestId, userId, status, pageable);
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
+    @GetMapping("/{submissionId}/url")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getMediaUrl(
+            @PathVariable Long contestId,
+            @PathVariable String submissionId,
+            Authentication authentication
+    ) {
+        var userId = (UUID) authentication.getPrincipal();
+        var result = getSubmissionMediaUrlUseCase.execute(contestId, submissionId, userId);
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> submitEntry(
+            @PathVariable final Long contestId,
+            @RequestPart("file") final MultipartFile file,
+            final Authentication authentication
+    ) {
+        final var userId = (UUID) authentication.getPrincipal();
+
+        final var result = submitEntryForContestUseCase.execute(
+                contestId,
+                userId,
+                file
+        );
+
+        return result.toResponseEntity(HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("my")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> withdrawMySubmission(
+            @PathVariable final Long contestId,
+            final Authentication authentication
+    ) {
+        final var userId = (UUID) authentication.getPrincipal();
+
+        final var result = withdrawSubmissionUseCase.execute(contestId, userId);
+
+        return result.toResponseEntity(HttpStatus.NO_CONTENT);
     }
 
 //    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

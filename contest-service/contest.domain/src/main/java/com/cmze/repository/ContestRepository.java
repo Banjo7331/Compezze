@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,5 +16,5 @@ public interface ContestRepository {
 
     Contest save(Contest contest);
 
-    List<Contest> findUpcomingForUser(String userId, Pageable pageable);
+    Page<Contest> findUpcomingForUser(String userId, LocalDateTime cutoffDate, Pageable pageable);
 }

@@ -2,11 +2,12 @@ package com.cmze.controller;
 
 import com.cmze.request.CreateContestRequest;
 import com.cmze.request.ManageRoleRequest;
-import com.cmze.request.ReorderStagesRequest;
-import com.cmze.request.UpdateStageRequest;
 import com.cmze.usecase.contest.*;
+import com.cmze.usecase.participant.ManageContestRolesUseCase;
 import com.cmze.usecase.participant.SubmitEntryForContestUseCase;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +22,7 @@ public class ContestController {
 
     private final CreateContestUseCase createContestUseCase;
     private final GetUpcomingContestUseCase getUpcomingContestUseCase;
+    private final GetMyEnteredContestsUseCase getMyEnteredContestsUseCase;
     private final ManageContestRolesUseCase manageContestRolesUseCase;
     private final GetContestDetailsUseCase getContestDetailsUseCase;
     private final JoinContestUseCase joinContestUseCase;
@@ -30,6 +32,7 @@ public class ContestController {
 
     public ContestController(CreateContestUseCase createContestUseCase,
                              GetUpcomingContestUseCase getUpcomingContestUseCase,
+                             GetMyEnteredContestsUseCase getMyEnteredContestsUseCase,
                              ManageContestRolesUseCase manageContestRolesUseCase,
                              GetContestDetailsUseCase getContestDetailsUseCase,
                              JoinContestUseCase joinContestUseCase,
@@ -39,6 +42,7 @@ public class ContestController {
     ) {
         this.createContestUseCase = createContestUseCase;
         this.getUpcomingContestUseCase = getUpcomingContestUseCase;
+        this.getMyEnteredContestsUseCase = getMyEnteredContestsUseCase;
         this.manageContestRolesUseCase = manageContestRolesUseCase;
         this.getContestDetailsUseCase = getContestDetailsUseCase;
         this.joinContestUseCase = joinContestUseCase;
@@ -68,6 +72,17 @@ public class ContestController {
         return result.toResponseEntity(HttpStatus.OK);
     }
 
+    @GetMapping("/my")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getMyContests(
+            final Authentication authentication,
+            @PageableDefault(size = 10, sort = "startDate") final Pageable pageable
+    ) {
+        final var userId = (UUID) authentication.getPrincipal();
+        final var result = getMyEnteredContestsUseCase.execute(userId, pageable);
+        return result.toResponseEntity(HttpStatus.OK);
+    }
+
     @PutMapping("/{contestId}/roles")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> manageRole(
@@ -84,8 +99,12 @@ public class ContestController {
 
     @GetMapping("/{contestId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getDetails(@PathVariable String contestId) {
-        var result = getContestDetailsUseCase.execute(contestId);
+    public ResponseEntity<?> getDetails(
+            @PathVariable Long contestId,
+            final Authentication authentication) {
+        final var organizerId = (UUID) authentication.getPrincipal();
+
+        final var result = getContestDetailsUseCase.execute(contestId, organizerId);
         return result.toResponseEntity(HttpStatus.OK);
     }
 

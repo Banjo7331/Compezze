@@ -49,7 +49,7 @@ public class ReviewSubmissionUseCase {
             }
             else {
                 var participant = participantRepository.findByContestIdAndUserId(contestId, reviewerId.toString());
-                if (participant.isPresent() && participant.get().getRoles().contains(ContestRole.Moderator)) {
+                if (participant.isPresent() && participant.get().getRoles().contains(ContestRole.MODERATOR)) {
                     isAllowed = true;
                 }
             }

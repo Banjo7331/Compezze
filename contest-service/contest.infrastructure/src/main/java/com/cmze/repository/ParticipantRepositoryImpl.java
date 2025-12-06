@@ -5,6 +5,7 @@ import com.cmze.external.jpa.ParticipantJpaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -35,6 +36,16 @@ public class ParticipantRepositoryImpl implements ParticipantRepository{
     @Override
     public long countByContest_Id(Long contestId) {
         return impl.countByContest_Id(contestId);
+    }
+
+    @Override
+    public List<Participant> findAllByContest_Id(Long contestId) {
+        return impl.findAllByContest_Id(contestId);
+    }
+
+    @Override
+    public List<Participant> findByContest_IdAndDisplayNameContainingIgnoreCase(Long contestId, String query) {
+        return impl.findByContest_IdAndDisplayNameContainingIgnoreCase(contestId, query);
     }
 
 }

@@ -31,57 +31,57 @@ public class UploadTemplateUseCase {
         this.objectKeyFactory = objectKeyFactory;
     }
 
-    @Transactional
-    public ActionResult<MediaLocation> execute(MultipartFile file, String uploaderId) {
-
-        ProblemDetail validationError = validateImage(file);
-        if (validationError != null) {
-            return ActionResult.failure(validationError);
-        }
-
-        String originalFilename = file.getOriginalFilename();
-
-        MediaLocation location = objectKeyFactory.generateForTemplate(uploaderId, originalFilename);
-
-        try {
-            minioService.upload(
-                    location.getBucket(),
-                    location.getObjectKey(),
-                    file.getInputStream(),
-                    file.getSize(),
-                    file.getContentType()
-            );
-        } catch (Exception e) {
-            logger.error("Failed to upload template '{}' by user {}: {}", originalFilename, uploaderId, e.getMessage());
-            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
-                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload template."));
-        }
-
-        return ActionResult.success(location);
-    }
-
-    private ProblemDetail validateImage(MultipartFile image) {
-        if (image == null || image.isEmpty()) {
-            return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "File is required.");
-        }
-
-        String contentType = Objects.toString(image.getContentType(), "");
-        if (!(contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/webp"))) {
-            return ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Only JPEG, PNG or WEBP are allowed.");
-        }
-        if (image.getSize() > maxBytes) {
-            return ProblemDetail.forStatusAndDetail(HttpStatus.PAYLOAD_TOO_LARGE, "Image must be <= 5 MB.");
-        }
-
-        try (InputStream is = image.getInputStream()) {
-            if (ImageIO.read(is) == null) {
-                return ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Invalid image file content. File is not a valid image.");
-            }
-        } catch (IOException e) {
-            logger.warn("Could not read image input stream for validation", e);
-            return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Failed to read image file.");
-        }
-
-        return null;
-    }
+//    @Transactional
+//    public ActionResult<MediaLocation> execute(MultipartFile file, String uploaderId) {
+//
+//        ProblemDetail validationError = validateImage(file);
+//        if (validationError != null) {
+//            return ActionResult.failure(validationError);
+//        }
+//
+//        String originalFilename = file.getOriginalFilename();
+//
+//        MediaLocation location = objectKeyFactory.generateForTemplate(uploaderId, originalFilename);
+//
+//        try {
+//            minioService.upload(
+//                    location.getBucket(),
+//                    location.getObjectKey(),
+//                    file.getInputStream(),
+//                    file.getSize(),
+//                    file.getContentType()
+//            );
+//        } catch (Exception e) {
+//            logger.error("Failed to upload template '{}' by user {}: {}", originalFilename, uploaderId, e.getMessage());
+//            return ActionResult.failure(ProblemDetail.forStatusAndDetail(
+//                    HttpStatus.INTERNAL_SERVER_ERROR, "Failed to upload template."));
+//        }
+//
+//        return ActionResult.success(location);
+//    }
+//
+//    private ProblemDetail validateImage(MultipartFile image) {
+//        if (image == null || image.isEmpty()) {
+//            return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "File is required.");
+//        }
+//
+//        String contentType = Objects.toString(image.getContentType(), "");
+//        if (!(contentType.equals("image/jpeg") || contentType.equals("image/png") || contentType.equals("image/webp"))) {
+//            return ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Only JPEG, PNG or WEBP are allowed.");
+//        }
+//        if (image.getSize() > maxBytes) {
+//            return ProblemDetail.forStatusAndDetail(HttpStatus.PAYLOAD_TOO_LARGE, "Image must be <= 5 MB.");
+//        }
+//
+//        try (InputStream is = image.getInputStream()) {
+//            if (ImageIO.read(is) == null) {
+//                return ProblemDetail.forStatusAndDetail(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Invalid image file content. File is not a valid image.");
+//            }
+//        } catch (IOException e) {
+//            logger.warn("Could not read image input stream for validation", e);
+//            return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Failed to read image file.");
+//        }
+//
+//        return null;
+//    }
 }

@@ -1,9 +1,9 @@
 package com.cmze.enums;
 
 public enum ContestRole {
-    Organizer,
-    Moderator,
-    Competitor,
-    Jury,
-    Vip
+    ORGANIZER,
+    MODERATOR,
+    COMPETITOR,
+    JURY,
+    VIP
 }

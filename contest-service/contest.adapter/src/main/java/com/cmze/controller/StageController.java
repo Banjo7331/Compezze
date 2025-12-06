@@ -42,7 +42,7 @@ public class StageController {
         return result.toResponseEntity(HttpStatus.OK);
     }
 
-    @PatchMapping("/stages/reorder")
+    @PatchMapping("/stage/reorder")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> reorderStages(
             @PathVariable final Long contestId,

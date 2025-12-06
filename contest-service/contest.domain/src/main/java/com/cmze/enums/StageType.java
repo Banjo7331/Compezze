@@ -6,5 +6,5 @@ public enum StageType {
     JURY_VOTE,
     SURVEY,
     QUIZ,
-    CUSTOM
+    GENERIC
 }

@@ -2,7 +2,9 @@ package com.cmze.external.identity;
 
 import com.cmze.spi.identity.IdentityServiceClient;
 import com.cmze.spi.identity.UserDto;
-import org.springframework.http.ResponseEntity;
+import feign.FeignException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -10,6 +12,7 @@ import java.util.UUID;
 @Component
 public class IdentityServiceClientImpl implements IdentityServiceClient {
 
+    private static final Logger logger = LoggerFactory.getLogger(IdentityServiceClientImpl.class);
     private final InternalIdentityApi internalApi;
 
     public IdentityServiceClientImpl(InternalIdentityApi internalApi) {
@@ -19,16 +22,27 @@ public class IdentityServiceClientImpl implements IdentityServiceClient {
     @Override
     public UserDto getUserByUsername(String username) {
         try {
-            UserDto response = internalApi.fetchUserByUsername(username);
-            return response;
+            return internalApi.fetchUserByUsername(username);
+        } catch (FeignException.NotFound e) {
+            return null;
         } catch (Exception e) {
-            throw new RuntimeException("Could not fetch user data for: " + username, e);
+            logger.error("Failed to fetch user by username: {}", username, e);
+            throw new RuntimeException("Auth service unavailable", e);
         }
     }
 
     @Override
     public UserDto getUserById(UUID userId) {
-        return null;
-    }
+        try {
+            return internalApi.getUserById(userId);
 
+        } catch (FeignException.NotFound e) {
+            logger.warn("User with ID {} not found in Auth Service", userId);
+            return null;
+
+        } catch (Exception e) {
+            logger.error("Failed to fetch user by ID: {}", userId, e);
+            return null;
+        }
+    }
 }

@@ -1,9 +1,12 @@
 package com.cmze.usecase.contest;
 
 import com.cmze.entity.Contest;
+import com.cmze.entity.Participant;
 import com.cmze.entity.Stage;
 
+import com.cmze.enums.ContestRole;
 import com.cmze.enums.ContestStatus;
+import com.cmze.repository.ParticipantRepository;
 import com.cmze.request.CreateContestRequest;
 
 import com.cmze.repository.ContestRepository;
@@ -11,6 +14,7 @@ import com.cmze.spi.StageSettingsContext;
 
 import com.cmze.response.CreateContestResponse;
 import com.cmze.shared.ActionResult;
+import com.cmze.spi.identity.IdentityServiceClient;
 import com.cmze.usecase.UseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +24,10 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.UUID;
 
 @UseCase
 public class CreateContestUseCase {
@@ -29,7 +35,9 @@ public class CreateContestUseCase {
     private static final Logger logger = LoggerFactory.getLogger(CreateContestUseCase.class);
 
     private final ContestRepository contestRepository;
+    private final ParticipantRepository participantRepository;
     private final StageSettingsContext stageContext;
+    private final IdentityServiceClient identityClient;
 
     // private final MinioService minioService;
     // private final ObjectKeyFactory objectKeyFactory;
@@ -38,12 +46,16 @@ public class CreateContestUseCase {
     private String publicBaseUrl;
 
     public CreateContestUseCase(final ContestRepository contestRepository,
-                                final StageSettingsContext stageContext
+                                final ParticipantRepository participantRepository,
+                                final StageSettingsContext stageContext,
+                                final IdentityServiceClient identityClient
                                 // , final MinioService minioService,
                                 // final ObjectKeyFactory objectKeyFactory
     ) {
         this.contestRepository = contestRepository;
+        this.participantRepository = participantRepository;
         this.stageContext = stageContext;
+        this.identityClient = identityClient;
         // this.minioService = minioService;
         // this.objectKeyFactory = objectKeyFactory;
     }
@@ -133,8 +145,25 @@ public class CreateContestUseCase {
             }
             contest.setStages(stages);
 
-            // 3. Zapis
             final var savedContest = contestRepository.save(contest);
+
+            String hostDisplayName = "Organizer";
+            try {
+                final var userDto = identityClient.getUserById(UUID.fromString(organizerId));
+                if (userDto != null) hostDisplayName = userDto.getUsername();
+            } catch (Exception e) {
+                logger.warn("Could not fetch organizer name, using default.");
+            }
+
+            final var organizerParticipant = new Participant();
+            organizerParticipant.setContest(savedContest);
+            organizerParticipant.setUserId(organizerId);
+            organizerParticipant.setDisplayName(hostDisplayName);
+            organizerParticipant.setCreatedAt(LocalDateTime.now());
+
+            organizerParticipant.getRoles().add(ContestRole.ORGANIZER);
+
+            participantRepository.save(organizerParticipant);
 
             logger.info("Contest created with id {} by organizer {}", savedContest.getId(), organizerId);
 

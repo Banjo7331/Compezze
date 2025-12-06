@@ -17,22 +17,22 @@ public class ObjectKeyFactoryImpl implements ObjectKeyFactory {
     private String privateBucket;
 
     @Override
-    public MediaLocation generateForSubmission(String contestId, String userId, String originalFilename) {
-        String key = "contests/" + safe(contestId) + "/submissions/" + safe(userId) + "/"
+    public MediaLocation generateForSubmission(Long contestId, String userId, String originalFilename) {
+        String key = "contests/" + safe(String.valueOf(contestId)) + "/submissions/" + safe(userId) + "/"
                 + UUID.randomUUID() + extOf(originalFilename);
         return new MediaLocation(privateBucket, key);
     }
 
     @Override
-    public MediaLocation generateForPreview(String contestId, String submissionId) {
-        String key = "contests/" + safe(contestId) + "/previews/" + safe(submissionId) + "/"
+    public MediaLocation generateForPreview(Long contestId, String submissionId) {
+        String key = "contests/" + safe(String.valueOf(contestId)) + "/previews/" + safe(submissionId) + "/"
                 + UUID.randomUUID() + ".jpg";
         return new MediaLocation(publicBucket, key);
     }
 
     @Override
-    public MediaLocation generateForTemplate(String contestId, String originalFilename) {
-        String key = "templates/" + safe(contestId) + "/" + safeFilename(originalFilename);
+    public MediaLocation generateForTemplate(Long contestId, String originalFilename) {
+        String key = "templates/" + safe(String.valueOf(contestId)) + "/" + safeFilename(originalFilename);
         return new MediaLocation(publicBucket, key);
     }
 
