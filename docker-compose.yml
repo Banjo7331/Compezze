@@ -26,8 +26,8 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin123
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"   # API S3
-      - "9001:9001"   # Konsola WWW
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -35,7 +35,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-
+  
   minio-init:
     image: minio/mc:latest
     depends_on:
@@ -92,6 +92,20 @@ services:
       exit 0
       "
 
+  redis:
+    image: redis:alpine
+    container_name: contests_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
 volumes:
   db_data:
   minio_data:
+  redis_data:

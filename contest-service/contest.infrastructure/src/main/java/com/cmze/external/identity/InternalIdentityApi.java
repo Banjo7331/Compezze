@@ -16,6 +16,6 @@ import java.util.UUID;
 public interface InternalIdentityApi {
     @GetMapping("/{usernameOrEmail}")
     UserDto fetchUserByUsername(@PathVariable("usernameOrEmail") String username);
-    @GetMapping("/api/v1/users/{userId}")
+    @GetMapping("/{userId}")
     UserDto getUserById(@PathVariable("userId") UUID userId);
 }

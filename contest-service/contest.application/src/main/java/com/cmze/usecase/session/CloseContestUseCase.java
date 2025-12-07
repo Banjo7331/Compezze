@@ -1,12 +1,7 @@
-package com.cmze.usecase.contest;
+package com.cmze.usecase.session;
 
-import com.cmze.entity.Contest;
 import com.cmze.repository.ContestRepository;
-import com.cmze.shared.ActionResult;
 import com.cmze.usecase.UseCase;
-import jakarta.transaction.Transactional;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
 
 @UseCase
 public class CloseContestUseCase {

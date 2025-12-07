@@ -6,5 +6,5 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class ContestFinishedEvent {
-    private final String contestId;
+    private final Long contestId;
 }

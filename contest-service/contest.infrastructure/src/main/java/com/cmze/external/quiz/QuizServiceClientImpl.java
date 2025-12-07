@@ -1,10 +1,7 @@
 package com.cmze.external.quiz;
 
 import com.cmze.spi.quiz.QuizServiceClient;
-import com.cmze.spi.quiz.dto.CreateQuizRoomRequest;
-import com.cmze.spi.quiz.dto.CreateQuizRoomResponse;
-import com.cmze.spi.quiz.dto.GenerateQuizTokenRequest;
-import com.cmze.spi.quiz.dto.GenerateQuizTokenResponse;
+import com.cmze.spi.quiz.dto.*;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,14 +42,22 @@ public class QuizServiceClientImpl implements QuizServiceClient {
         }
     }
 
-//    @Override
-//    public Get getRoomDetails(String roomId) {
-//        try {
-//            return internalApi.getRoomDetails(roomId);
-//        } catch (Exception e) {
-//            logger.error("Failed to get room details for {}", roomId, e);
-//            // Tu można zwrócić null lub rzucić wyjątek, zależnie od strategii
-//            throw new RuntimeException("Failed to fetch quiz results", e);
-//        }
-//    }
+    @Override
+    public GetQuizRoomDetailsResponse getRoomDetails(String roomId) {
+        try {
+            return internalApi.getRoomDetails(roomId);
+        } catch (Exception e) {
+            logger.error("Failed to get room details for {}", roomId, e);
+            throw new RuntimeException("Failed to fetch quiz results", e);
+        }
+    }
+    @Override
+    public void closeRoom(String roomId) {
+        try {
+            internalApi.closeRoom(roomId);
+            logger.info("Closed remote quiz room: {}", roomId);
+        } catch (Exception e) {
+            logger.error("Failed to close remote quiz room {}", roomId, e);
+        }
+    }
 }

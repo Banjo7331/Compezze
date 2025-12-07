@@ -8,11 +8,13 @@ import com.cmze.internal.service.stagesettings.strategy.StageSettingsStrategy;
 import com.cmze.repository.StageRepository;
 import com.cmze.request.StageRequest;
 import com.cmze.request.UpdateStageRequest;
+import com.cmze.response.stagesettings.EmptySettingsResponse;
 import com.cmze.response.stagesettings.StageSettingsResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -50,12 +52,13 @@ public class EmptyStageSettingsStrategy implements StageSettingsStrategy {
 
     }
     @Override
-    public StageSettingsResponse runStage(long stageId) {
-        return null;
+    public StageSettingsResponse runStage(final long stageId) {
+        return new EmptySettingsResponse(stageId, "GENERIC");
     }
 
     @Override
-    public Map<UUID, Double> collectResults(Stage stage) {
-        return Map.of();
+    public Map<UUID, Double> finishStage(final Stage stage) {
+        return Collections.emptyMap();
     }
+
 }

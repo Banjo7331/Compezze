@@ -7,7 +7,14 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmptySettingsResponse implements StageSettingsResponse {
+public class SurveySettingsResponse implements StageSettingsResponse {
+
     private Long stageId;
     private String type;
+    private Long surveyFormId;
+    private Integer maxParticipants;
+    private Integer durationMinutes;
+
+    private String activeRoomId;
+
 }

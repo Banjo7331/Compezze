@@ -5,6 +5,8 @@ import com.cmze.request.ManageRoleRequest;
 import com.cmze.usecase.contest.*;
 import com.cmze.usecase.participant.ManageContestRolesUseCase;
 import com.cmze.usecase.participant.SubmitEntryForContestUseCase;
+import com.cmze.usecase.session.CloseContestUseCase;
+import com.cmze.usecase.session.StartContestUseCase;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;

@@ -22,5 +22,5 @@ public interface StageSettingsStrategy {
 
     StageSettingsResponse runStage(long stageId);
 
-    Map<UUID, Double> collectResults(Stage stage);
+    Map<UUID, Double> finishStage(Stage stage);
 }

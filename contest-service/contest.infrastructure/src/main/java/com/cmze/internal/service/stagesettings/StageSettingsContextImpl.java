@@ -65,12 +65,11 @@ public class StageSettingsContextImpl implements StageSettingsContext {
     }
 
     @Override
-    public Map<UUID, Double> collectResults(final Stage stage) {
+    public Map<UUID, Double> finishStage(final Stage stage) {
         final var strategy = byType.get(stage.getType());
         if (strategy == null) {
-            return Map.of();
+            return java.util.Collections.emptyMap();
         }
-        return strategy.collectResults(stage);
+        return strategy.finishStage(stage);
     }
-
 }

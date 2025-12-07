@@ -8,12 +8,15 @@ import com.cmze.repository.StageRepository;
 import com.cmze.request.StageRequest;
 import com.cmze.request.UpdateStageRequest;
 import com.cmze.response.stagesettings.StageSettingsResponse;
+import com.cmze.response.stagesettings.SurveySettingsResponse;
 import com.cmze.spi.survey.SurveyServiceClient;
+import com.cmze.spi.survey.dto.CreateSurveyRoomRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -63,11 +66,83 @@ public class SurveyStageSettingsStrategy implements StageSettingsStrategy {
 
     @Override
     public StageSettingsResponse runStage(final long stageId) {
-        return null;
+        final var stageOpt = stageRepository.findById(stageId);
+        if (stageOpt.isEmpty() || !(stageOpt.get() instanceof SurveyStage)) {
+            throw new IllegalStateException("Invalid stage for SURVEY strategy");
+        }
+        final var stage = (SurveyStage) stageOpt.get();
+
+        if (stage.getActiveRoomId() != null) {
+            return new SurveySettingsResponse(
+                    stage.getId(),
+                    "SURVEY",
+                    stage.getSurveyFormId(),
+                    stage.getMaxParticipants(),
+                    stage.getDurationMinutes(),
+                    stage.getActiveRoomId()
+            );
+        }
+
+        final var request = CreateSurveyRoomRequest.builder()
+                .surveyFormId(stage.getSurveyFormId())
+                .maxParticipants(stage.getMaxParticipants())
+                .durationMinutes(stage.getDurationMinutes())
+                .isPrivate(true)
+                .build();
+
+        try {
+            final var response = surveyClient.createRoom(request);
+
+            stage.setActiveRoomId(response.getRoomId().toString());
+            stageRepository.save(stage);
+
+            return new SurveySettingsResponse(
+                    stage.getId(),
+                    "SURVEY",
+                    stage.getSurveyFormId(),
+                    stage.getMaxParticipants(),
+                    stage.getDurationMinutes(),
+                    response.getRoomId().toString()
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to start remote Survey room", e);
+        }
     }
 
     @Override
-    public Map<UUID, Double> collectResults(final Stage stage) {
-        return Collections.emptyMap();
+    public Map<UUID, Double> finishStage(final Stage stage) {
+        if (!(stage instanceof SurveyStage surveyStage)) throw new IllegalStateException("Wrong type");
+
+        final String roomId = surveyStage.getActiveRoomId();
+        if (roomId == null) {
+            return Collections.emptyMap();
+        }
+
+        try {
+            surveyClient.closeRoom(roomId);
+
+            final var roomDetails = surveyClient.getRoomDetails(roomId);
+
+            final Map<UUID, Double> results = new HashMap<>();
+
+            double weight = 1.0;
+
+            if (roomDetails != null
+                    && roomDetails.getCurrentResults() != null
+                    && roomDetails.getCurrentResults().getLeaderboard() != null) {
+
+                for (final var entry : roomDetails.getCurrentResults().getLeaderboard()) {
+                    double finalScore = entry.getScore() * weight;
+                    results.put(entry.getUserId(), finalScore);
+                }
+            }
+
+            return results;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to finish remote survey room", e);
+        }
     }
+
 }

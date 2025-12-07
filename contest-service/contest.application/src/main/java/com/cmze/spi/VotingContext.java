@@ -1,8 +1,10 @@
 package com.cmze.spi;
 
-import com.cmze.request.VoteCommand;
+import com.cmze.request.VoteRequest;
 import com.cmze.shared.ActionResult;
 
+import java.util.UUID;
+
 public interface VotingContext {
-//    ActionResult<Void> submitForStage(String contestId, long stageId, String userId, VoteCommand cmd);
+    ActionResult<Void> executeVote(Long contestId, UUID userId, VoteRequest request);
 }

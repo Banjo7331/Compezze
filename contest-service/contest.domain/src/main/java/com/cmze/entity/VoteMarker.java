@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "vote_marker",
@@ -25,26 +26,23 @@ import java.time.OffsetDateTime;
 public class VoteMarker {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "stage_id", nullable = false)
     private Stage stage;
 
-    /** Kto głosuje (uczestnik/uczestnik-publiczności powiązany z konkursem). */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "participant_id", nullable = false)
     private Participant participant;
 
-    /** Na co głosuje. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "submission_id", nullable = false)
     private Submission submission;
 
-    /** Dla jury: punktacja; dla public: null (albo 1 – wtedy możesz mieć jedną ścieżkę liczenia). */
     @Column(name = "score")
-    private Integer score; // null dla public; 0..max dla jury
+    private Integer score;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();

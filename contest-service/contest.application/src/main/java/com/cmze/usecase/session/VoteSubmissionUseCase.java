@@ -1,10 +1,11 @@
 package com.cmze.usecase.session;
 
-import com.cmze.request.VoteCommand;
+import com.cmze.request.VoteRequest;
 import com.cmze.shared.ActionResult;
 import com.cmze.spi.VotingContext;
 import com.cmze.usecase.UseCase;
-import jakarta.transaction.Transactional;
+
+import java.util.UUID;
 
 @UseCase
 public class VoteSubmissionUseCase {
@@ -14,14 +15,8 @@ public class VoteSubmissionUseCase {
     public VoteSubmissionUseCase(VotingContext votingContext) {
         this.votingContext = votingContext;
     }
-//
-//    @Transactional
-//    public ActionResult<Void> execute(String contestId, Long stageId, String userId, VoteCommand cmd) {
-//        if (stageId == null) {
-//            return ActionResult.failure(org.springframework.http.ProblemDetail.forStatusAndDetail(
-//                    org.springframework.http.HttpStatus.BAD_REQUEST, "stageId is required."));
-//        }
-//
-//        return votingContext.submitForStage(contestId, stageId, userId, cmd);
-//    }
+
+    public ActionResult<Void> execute(String contestId, UUID userId, VoteRequest request) {
+        return votingContext.executeVote(contestId, userId, request);
+    }
 }

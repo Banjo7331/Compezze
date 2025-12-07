@@ -1,11 +1,13 @@
 package com.cmze.internal.service.voting.strategy;
 
+import com.cmze.entity.Participant;
 import com.cmze.entity.Stage;
+import com.cmze.entity.Submission;
 import com.cmze.enums.StageType;
-import com.cmze.request.VoteCommand;
-import com.cmze.shared.ActionResult;
 
 public interface VotingStrategy {
-//    StageType type();
-//    ActionResult<Void> submit(Stage stage, String userId, VoteCommand cmd);
+
+    StageType getStageType();
+
+    void vote(Stage stage, Participant voter, Submission submission, int score);
 }

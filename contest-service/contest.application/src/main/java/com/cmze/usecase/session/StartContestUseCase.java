@@ -1,22 +1,6 @@
-package com.cmze.usecase.contest;
+package com.cmze.usecase.session;
 
-import com.cmze.entity.Contest;
-import com.cmze.entity.Participant;
-import com.cmze.entity.Room;
-import com.cmze.enums.ContestStatus;
-import com.cmze.repository.ContestRepository;
-import com.cmze.repository.ParticipantRepository;
-import com.cmze.repository.RoomRepository;
-import com.cmze.response.event.RoomEvent;
-import com.cmze.shared.ActionResult;
-import com.cmze.spi.RoomGateway;
 import com.cmze.usecase.UseCase;
-import jakarta.transaction.Transactional;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ProblemDetail;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @UseCase
 public class StartContestUseCase {

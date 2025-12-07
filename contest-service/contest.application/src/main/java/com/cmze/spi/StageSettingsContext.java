@@ -15,5 +15,5 @@ public interface StageSettingsContext {
     Stage createStage(StageRequest dto);
     void updateStage(UpdateStageRequest dto, Stage stage);
     StageSettingsResponse runStage(long stageId, StageType type);
-    Map<UUID, Double> collectResults(Stage stage);
+    Map<UUID, Double> finishStage(Stage stage);
 }

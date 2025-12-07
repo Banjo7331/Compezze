@@ -25,6 +25,9 @@ public class QuizStage extends Stage {
     @Column(name = "quiz_form_id", nullable = false)
     private Long quizFormId;
 
+    @Column(name = "active_room_id")
+    private String activeRoomId;
+
     @Column(name = "max_participants")
     @Min(1)
     @Max(1000)

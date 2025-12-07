@@ -25,6 +25,9 @@ public class SurveyStage extends Stage {
     @Column(name = "survey_form_id", nullable = false)
     private Long surveyFormId;
 
+    @Column(name = "active_room_id")
+    private String activeRoomId;
+
     @Column(name = "max_participants")
     @Min(1)
     @Max(1000)
