@@ -26,6 +26,11 @@ public class RoomRepositoryImpl implements RoomRepository {
     }
 
     @Override
+    public Optional<Room> findById(String roomId) {
+        return impl.findById(roomId);
+    }
+
+    @Override
     public Optional<Room> findByContest_Id(Long contestId) {
         return impl.findByContest_Id(contestId);
     }

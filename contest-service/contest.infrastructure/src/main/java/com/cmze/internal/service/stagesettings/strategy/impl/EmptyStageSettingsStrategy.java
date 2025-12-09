@@ -57,6 +57,12 @@ public class EmptyStageSettingsStrategy implements StageSettingsStrategy {
     }
 
     @Override
+    public StageSettingsResponse getSettings(final Stage stage) {
+        Long id = (stage != null) ? stage.getId() : 0L;
+        return new EmptySettingsResponse(id, "GENERIC");
+    }
+
+    @Override
     public Map<UUID, Double> finishStage(final Stage stage) {
         return Collections.emptyMap();
     }

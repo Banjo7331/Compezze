@@ -85,6 +85,18 @@ public class PublicStageSettingsStrategy implements StageSettingsStrategy {
     }
 
     @Override
+    public StageSettingsResponse getSettings(final Stage stage) {
+        if (!(stage instanceof PublicVoteStage publicStage)) throw new IllegalStateException("Wrong type");
+
+        return new PublicVotingSettingsResponse(
+                publicStage.getId(),
+                "PUBLIC_VOTE",
+                publicStage.getWeight(),
+                publicStage.getMaxScore()
+        );
+    }
+
+    @Override
     public Map<UUID, Double> finishStage(final Stage stage) {
         if (!(stage instanceof PublicVoteStage publicStage)) throw new IllegalStateException("Wrong type");
 

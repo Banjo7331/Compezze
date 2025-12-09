@@ -22,5 +22,7 @@ public interface StageSettingsStrategy {
 
     StageSettingsResponse runStage(long stageId);
 
+    StageSettingsResponse getSettings(Stage stage);
+
     Map<UUID, Double> finishStage(Stage stage);
 }

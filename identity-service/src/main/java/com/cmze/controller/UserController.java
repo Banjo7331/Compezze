@@ -13,8 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
@@ -34,10 +33,17 @@ public class UserController {
         return ResponseEntity.ok(user);
     }
 
-    @GetMapping("/{username}")
+    @GetMapping("/username/{username}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserDto> getUserByUsername(@PathVariable String username) {
         UserDto user = userService.getUserByUsername(username);
+
+        return ResponseEntity.ok(user);
+    }
+    @GetMapping("/{userId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserDto> getUserById(@PathVariable UUID userId) {
+        UserDto user = userService.getUserById(userId);
 
         return ResponseEntity.ok(user);
     }

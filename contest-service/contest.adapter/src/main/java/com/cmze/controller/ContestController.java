@@ -28,9 +28,7 @@ public class ContestController {
     private final ManageContestRolesUseCase manageContestRolesUseCase;
     private final GetContestDetailsUseCase getContestDetailsUseCase;
     private final JoinContestUseCase joinContestUseCase;
-    private final SubmitEntryForContestUseCase submitEntryForContestUseCase;
-    private final CloseContestUseCase closeContestUseCase;
-    private final StartContestUseCase startContestUseCase;
+    private final CloseSubmissionsEnteringUseCase closeSubmissionsEnteringUseCase;
 
     public ContestController(CreateContestUseCase createContestUseCase,
                              GetUpcomingContestUseCase getUpcomingContestUseCase,
@@ -38,9 +36,7 @@ public class ContestController {
                              ManageContestRolesUseCase manageContestRolesUseCase,
                              GetContestDetailsUseCase getContestDetailsUseCase,
                              JoinContestUseCase joinContestUseCase,
-                             SubmitEntryForContestUseCase submitEntryForContestUseCase,
-                             CloseContestUseCase closeContestUseCase,
-                             StartContestUseCase startContestUseCase
+                             CloseSubmissionsEnteringUseCase closeSubmissionsEnteringUseCase
     ) {
         this.createContestUseCase = createContestUseCase;
         this.getUpcomingContestUseCase = getUpcomingContestUseCase;
@@ -48,9 +44,7 @@ public class ContestController {
         this.manageContestRolesUseCase = manageContestRolesUseCase;
         this.getContestDetailsUseCase = getContestDetailsUseCase;
         this.joinContestUseCase = joinContestUseCase;
-        this.submitEntryForContestUseCase = submitEntryForContestUseCase;
-        this.closeContestUseCase = closeContestUseCase;
-        this.startContestUseCase = startContestUseCase;
+        this.closeSubmissionsEnteringUseCase = closeSubmissionsEnteringUseCase;
     }
 
     @PostMapping
@@ -123,21 +117,15 @@ public class ContestController {
         return result.toResponseEntity(HttpStatus.OK);
     }
 
-
-//    @PostMapping("/{id}/start")
-//    public ResponseEntity<?> start(@PathVariable String id,
-//                                   @RequestHeader("X-User-Id") String userId) {
-//        var result = startContestUseCase.execute(id, userId);
-//        // Use case emituje CONTEST_STARTED przez WS/SSE; REST może zwrócić 204.
-//        return result.toResponseEntity(HttpStatus.NO_CONTENT);
-//    }
-//
-//    @PostMapping("/{id}/close")
-//    public ResponseEntity<?> close(@PathVariable String id,
-//                                   @RequestHeader("X-User-Id") String organizerId
-//    ) {
-//        var result = closeContestUseCase.execute(id, organizerId);
-//        return result.toResponseEntity(HttpStatus.NO_CONTENT);
-//    }
+    @PostMapping("/{contestId}/close-submissions")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> closeSubmissions(
+            @PathVariable final Long contestId,
+            final Authentication authentication
+    ) {
+        final var organizerId = (UUID) authentication.getPrincipal();
+        final var result = closeSubmissionsEnteringUseCase.execute(contestId, organizerId);
+        return result.toResponseEntity(HttpStatus.OK);
+    }
 
 }

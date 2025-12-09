@@ -35,6 +35,5 @@ public class GetContestDetailsResponse {
     private boolean isParticipant;
     private Set<ContestRole> myRoles;
 
-
     private List<GetStageDetailsResponse> stages;
 }

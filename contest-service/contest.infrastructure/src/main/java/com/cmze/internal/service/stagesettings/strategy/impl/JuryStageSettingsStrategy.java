@@ -86,6 +86,20 @@ public class JuryStageSettingsStrategy implements StageSettingsStrategy {
     }
 
     @Override
+    public StageSettingsResponse getSettings(final Stage stage) {
+        if (!(stage instanceof JuryVoteStage juryStage)) throw new IllegalStateException("Wrong type");
+
+        return new JuryVotingSettingsResponse(
+                juryStage.getId(),
+                "JURY_VOTE",
+                juryStage.getWeight(),
+                juryStage.getMaxScore(),
+                juryStage.getJuryRevealMode(),
+                juryStage.isShowJudgeNames()
+        );
+    }
+
+    @Override
     public Map<UUID, Double> finishStage(final Stage stage) {
         if (!(stage instanceof JuryVoteStage juryStage)) throw new IllegalStateException("Wrong type");
 

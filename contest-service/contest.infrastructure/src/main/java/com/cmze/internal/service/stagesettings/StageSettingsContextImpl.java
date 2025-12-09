@@ -5,6 +5,7 @@ import com.cmze.enums.StageType;
 import com.cmze.internal.service.stagesettings.strategy.StageSettingsStrategy;
 import com.cmze.request.StageRequest;
 import com.cmze.request.UpdateStageRequest;
+import com.cmze.response.stagesettings.EmptySettingsResponse;
 import com.cmze.response.stagesettings.StageSettingsResponse;
 import com.cmze.spi.StageSettingsContext;
 import org.springframework.http.ProblemDetail;
@@ -62,6 +63,15 @@ public class StageSettingsContextImpl implements StageSettingsContext {
             throw new IllegalStateException("No strategy for type: " + type);
         }
         return strategy.runStage(stageId);
+    }
+
+    @Override
+    public StageSettingsResponse getSettings(final Stage stage) {
+        final var strategy = byType.get(stage.getType());
+        if (strategy == null) {
+            return new EmptySettingsResponse(stage.getId(), "GENERIC");
+        }
+        return strategy.getSettings(stage);
     }
 
     @Override

@@ -16,7 +16,7 @@ public class VoteSubmissionUseCase {
         this.votingContext = votingContext;
     }
 
-    public ActionResult<Void> execute(String contestId, UUID userId, VoteRequest request) {
+    public ActionResult<Void> execute(Long contestId, UUID userId, VoteRequest request) {
         return votingContext.executeVote(contestId, userId, request);
     }
 }

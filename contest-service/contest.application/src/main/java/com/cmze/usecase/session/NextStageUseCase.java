@@ -5,6 +5,7 @@ import com.cmze.enums.ContestStatus;
 import com.cmze.repository.ContestRepository;
 import com.cmze.repository.ParticipantRepository;
 import com.cmze.repository.RoomRepository;
+import com.cmze.response.stagesettings.StageSettingsResponse;
 import com.cmze.shared.ActionResult;
 import com.cmze.spi.StageSettingsContext;
 import com.cmze.usecase.UseCase;
@@ -27,7 +28,7 @@ public class NextStageUseCase {
     private static final Logger logger = LoggerFactory.getLogger(NextStageUseCase.class);
 
     private final ContestRepository contestRepository;
-    private final ParticipantRepository participantRepository; // Zmieniono z ParticipantRepository
+    private final ParticipantRepository participantRepository;
     private final RoomRepository roomRepository;
     private final StageSettingsContext stageContext;
     private final ApplicationEventPublisher eventPublisher;
@@ -45,7 +46,7 @@ public class NextStageUseCase {
     }
 
     @Transactional
-    public ActionResult<Void> execute(final Long contestId, final UUID organizerId) {
+    public ActionResult<StageSettingsResponse> execute(final Long contestId, final UUID organizerId) {
         try {
             final var contest = contestRepository.findById(contestId)
                     .orElseThrow(() -> new RuntimeException("Contest not found"));
@@ -101,6 +102,7 @@ public class NextStageUseCase {
                 roomRepository.save(liveRoom);
 
                 eventPublisher.publishEvent(new ContestFinishedEvent(contestId));
+
                 return ActionResult.success(null);
             }
 
@@ -118,11 +120,10 @@ public class NextStageUseCase {
                     contestId,
                     nextStage.getId(),
                     nextStage.getName(),
-                    nextStage.getType(),
-                    stageResponse.getExternalId()
+                    nextStage.getType()
             ));
 
-            return ActionResult.success(null);
+            return ActionResult.success(stageResponse);
 
         } catch (Exception e) {
             logger.error("Error transitioning to next stage", e);

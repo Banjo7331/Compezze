@@ -1,14 +1,12 @@
 package com.cmze.internal.service.stagesettings.strategy.impl;
 
 import com.cmze.entity.Stage;
-import com.cmze.entity.stagesettings.PublicVoteStage;
 import com.cmze.entity.stagesettings.QuizStage;
 import com.cmze.enums.StageType;
 import com.cmze.internal.service.stagesettings.strategy.StageSettingsStrategy;
 import com.cmze.repository.StageRepository;
 import com.cmze.request.StageRequest;
 import com.cmze.request.UpdateStageRequest;
-import com.cmze.response.stagesettings.PublicVotingSettingsResponse;
 import com.cmze.response.stagesettings.QuizSettingsResponse;
 import com.cmze.response.stagesettings.StageSettingsResponse;
 import com.cmze.spi.quiz.QuizServiceClient;
@@ -120,6 +118,21 @@ public class QuizStageSettingsStrategy implements StageSettingsStrategy {
         } catch (Exception e) {
             throw new RuntimeException("Failed to start remote Quiz room", e);
         }
+    }
+
+    @Override
+    public StageSettingsResponse getSettings(final Stage stage) {
+        if (!(stage instanceof QuizStage quizStage)) throw new IllegalStateException("Wrong type");
+
+        return new QuizSettingsResponse(
+                quizStage.getId(),
+                "QUIZ",
+                quizStage.getQuizFormId(),
+                quizStage.getWeight(),
+                quizStage.getMaxParticipants(),
+                quizStage.getTimePerQuestion(),
+                quizStage.getActiveRoomId()
+        );
     }
 
     @Override

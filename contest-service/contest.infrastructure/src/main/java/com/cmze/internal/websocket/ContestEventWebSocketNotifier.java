@@ -26,8 +26,7 @@ public class ContestEventWebSocketNotifier {
         final var payload = new ContestStageChangedSocketMessage(
                 event.getStageId(),
                 event.getStageName(),
-                event.getStageType(),
-                event.getActiveExternalId()
+                event.getStageType()
         );
 
         logger.info("Contest: Stage changed in {} to {} ({})",

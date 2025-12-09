@@ -2,15 +2,18 @@ package com.cmze.usecase.session;
 
 import com.cmze.repository.ContestRepository;
 import com.cmze.repository.ParticipantRepository;
+import com.cmze.repository.RoomRepository;
 import com.cmze.shared.ActionResult;
 import com.cmze.spi.StageSettingsContext;
 import com.cmze.usecase.UseCase;
+import com.cmze.ws.event.ContestStageChangedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import java.util.UUID;
 
@@ -21,15 +24,18 @@ public class FinishCurrentStageUseCase {
 
     private final ContestRepository contestRepository;
     private final ParticipantRepository participantRepository;
+    private final RoomRepository roomRepository;
     private final StageSettingsContext stageContext;
     private final ApplicationEventPublisher eventPublisher;
 
     public FinishCurrentStageUseCase(final ContestRepository contestRepository,
                                      final ParticipantRepository participantRepository,
+                                     final RoomRepository roomRepository,
                                      final StageSettingsContext stageContext,
                                      final ApplicationEventPublisher eventPublisher) {
         this.contestRepository = contestRepository;
         this.participantRepository = participantRepository;
+        this.roomRepository = roomRepository;
         this.stageContext = stageContext;
         this.eventPublisher = eventPublisher;
     }
@@ -37,7 +43,6 @@ public class FinishCurrentStageUseCase {
     @Transactional
     public ActionResult<Void> execute(final Long contestId, final UUID organizerId) {
         try {
-
             final var contest = contestRepository.findById(contestId)
                     .orElseThrow(() -> new RuntimeException("Contest not found"));
 
@@ -45,27 +50,30 @@ public class FinishCurrentStageUseCase {
                 return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "Not organizer"));
             }
 
-            // 2. Znalezienie aktywnego etapu
-            if (contest.getCurrentStageId() == null) {
-                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "No active stage to finish"));
+            final var liveRoomOpt = roomRepository.findByContest_Id(contestId);
+            if (liveRoomOpt.isEmpty()) {
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Live Room not created."));
+            }
+            final var liveRoom = liveRoomOpt.get();
+
+            final int currentPosition = liveRoom.getCurrentStagePosition() != null ? liveRoom.getCurrentStagePosition() : 0;
+
+            if (currentPosition <= 0) {
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "No active stage to finish (already in lobby/intermission?)"));
             }
 
             final var currentStage = contest.getStages().stream()
-                    .filter(s -> s.getId().equals(contest.getCurrentStageId()))
+                    .filter(s -> s.getPosition() == currentPosition)
                     .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("Active stage not found in stages list"));
+                    .orElseThrow(() -> new IllegalStateException("Active stage position " + currentPosition + " not found in stages list"));
 
             logger.info("Finishing stage: {}", currentStage.getName());
 
-            // 3. ZAMKNIĘCIE I POBRANIE WYNIKÓW (Strategia)
-            // To wywołuje np. QuizService.closeRoom() i pobiera tabelę wyników
             final var scores = stageContext.finishStage(currentStage);
 
-            // 4. Aktualizacja Punktów Uczestników
             if (!scores.isEmpty()) {
                 scores.forEach((userId, points) -> {
-                    // Szukamy uczestnika i dodajemy punkty do sumy całkowitej
-                    participantRepository.findByContestIdAndUserId(contestIdString, userId.toString())
+                    participantRepository.findByContestIdAndUserId(contestId, userId.toString())
                             .ifPresent(p -> {
                                 p.setTotalScore(p.getTotalScore() + points.longValue());
                                 participantRepository.save(p);
@@ -74,24 +82,18 @@ public class FinishCurrentStageUseCase {
                 logger.info("Updated scores for {} participants", scores.size());
             }
 
-            // 5. Aktualizacja Stanu Konkursu (Tryb Przerwy)
-            contest.setCurrentStageId(null);
-            contestRepository.save(contest);
 
-            // 6. Powiadomienie WebSocket
-            // Frontend otrzyma info o przerwie i powinien wyświetlić aktualny ranking globalny
             eventPublisher.publishEvent(new ContestStageChangedEvent(
-                    contestIdString,
-                    null, // brak aktywnego etapu
-                    "PRZERWA / WYNIKI",
+                    contestId,
                     null,
+                    "PRZERWA / WYNIKI",
                     null
             ));
 
             return ActionResult.success(null);
 
         } catch (Exception e) {
-            logger.error("Error finishing stage for contest {}", contestIdString, e);
+            logger.error("Error finishing stage for contest {}", contestId, e);
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ActionResult.failure(ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Error finishing stage"));
         }

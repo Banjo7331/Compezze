@@ -111,6 +111,20 @@ public class SurveyStageSettingsStrategy implements StageSettingsStrategy {
     }
 
     @Override
+    public StageSettingsResponse getSettings(final Stage stage) {
+        if (!(stage instanceof SurveyStage surveyStage)) throw new IllegalStateException("Wrong type");
+
+        return new SurveySettingsResponse(
+                surveyStage.getId(),
+                "SURVEY",
+                surveyStage.getSurveyFormId(),
+                surveyStage.getMaxParticipants(),
+                surveyStage.getDurationMinutes(),
+                surveyStage.getActiveRoomId()
+        );
+    }
+
+    @Override
     public Map<UUID, Double> finishStage(final Stage stage) {
         if (!(stage instanceof SurveyStage surveyStage)) throw new IllegalStateException("Wrong type");
 

@@ -9,9 +9,9 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class ContestFinishedSocketMessage extends ContestSocketMessage {
 
-    private String contestId;
+    private Long contestId;
 
-    public ContestFinishedSocketMessage(String contestId) {
+    public ContestFinishedSocketMessage(Long contestId) {
         super("CONTEST_FINISHED");
         this.contestId = contestId;
     }
