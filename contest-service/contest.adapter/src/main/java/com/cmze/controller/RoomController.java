@@ -17,7 +17,6 @@ public class RoomController {
     private final StartContestUseCase startContestUseCase;
     private final GetContestRoomDetailsUseCase getContestRoomDetailsUseCase;
     private final NextStageUseCase nextStageUseCase;
-    private final FinishCurrentStageUseCase finishCurrentStageUseCase;
     private final CloseContestUseCase closeContestRoomUseCase;
     private final GetStageAccessTokenUseCase getStageAccessTokenUseCase;
 
@@ -25,14 +24,12 @@ public class RoomController {
                           StartContestUseCase startContestUseCase,
                           GetContestRoomDetailsUseCase getContestRoomDetailsUseCase,
                           NextStageUseCase nextStageUseCase,
-                          FinishCurrentStageUseCase finishCurrentStageUseCase,
                           CloseContestUseCase closeContestRoomUseCase,
                           GetStageAccessTokenUseCase getStageAccessTokenUseCase) {
         this.createContestRoomUseCase = createContestRoomUseCase;
         this.startContestUseCase = startContestUseCase;
         this.getContestRoomDetailsUseCase = getContestRoomDetailsUseCase;
         this.nextStageUseCase = nextStageUseCase;
-        this.finishCurrentStageUseCase = finishCurrentStageUseCase;
         this.closeContestRoomUseCase = closeContestRoomUseCase;
         this.getStageAccessTokenUseCase = getStageAccessTokenUseCase;
     }
@@ -59,47 +56,39 @@ public class RoomController {
         return result.toResponseEntity(HttpStatus.OK);
     }
 
-    @PostMapping("/room/start")
+    @PostMapping("/room/{roomId}/start")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> startContest(
             @PathVariable final Long contestId,
+            @PathVariable final String roomId,
             final Authentication authentication
     ) {
         final var organizerId = (UUID) authentication.getPrincipal();
-        final var result = startContestUseCase.execute(contestId, organizerId);
+        final var result = startContestUseCase.execute(contestId, roomId, organizerId);
         return result.toResponseEntity(HttpStatus.OK);
     }
 
-    @PostMapping("/room/next-stage")
+    @PostMapping("/room/{roomId}/next-stage")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> nextStage(
             @PathVariable final Long contestId,
+            @PathVariable final String roomId,
             final Authentication authentication
     ) {
         final var organizerId = (UUID) authentication.getPrincipal();
-        final var result = nextStageUseCase.execute(contestId, organizerId);
+        final var result = nextStageUseCase.execute(contestId, roomId, organizerId);
         return result.toResponseEntity(HttpStatus.OK);
     }
 
-    @PostMapping("/room/finish-stage")
-    @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> finishStage(
-            @PathVariable final Long contestId,
-            final Authentication authentication
-    ) {
-        final var organizerId = (UUID) authentication.getPrincipal();
-        final var result = finishCurrentStageUseCase.execute(contestId, organizerId);
-        return result.toResponseEntity(HttpStatus.OK);
-    }
-
-    @PostMapping("/room/close")
+    @PostMapping("/room/{roomId}/close")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> closeContest(
             @PathVariable final Long contestId,
+            @PathVariable final String roomId,
             final Authentication authentication
     ) {
         final var organizerId = (UUID) authentication.getPrincipal();
-        final var result = closeContestRoomUseCase.execute(contestId, organizerId);
+        final var result = closeContestRoomUseCase.execute(contestId, roomId, organizerId);
         return result.toResponseEntity(HttpStatus.NO_CONTENT);
     }
 

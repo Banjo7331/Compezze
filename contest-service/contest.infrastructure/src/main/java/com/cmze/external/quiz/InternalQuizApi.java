@@ -27,7 +27,7 @@ public interface InternalQuizApi {
     @GetMapping("/{roomId}")
     GetQuizRoomDetailsResponse getRoomDetails(@PathVariable("roomId") String roomId);
 
-    @PostMapping("/api/v1/quiz/room/{roomId}/close")
+    @PostMapping("/{roomId}/close")
     void closeRoom(@PathVariable("roomId") String roomId);
 
 }
