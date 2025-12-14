@@ -3,7 +3,7 @@ version: "3.8"
 services:
   db:
     image: postgres:16
-    container_name: contests_db
+    container_name: contests_dev_db
     environment:
       POSTGRES_DB: contests
       POSTGRES_USER: contests
@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_dev_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U contests -d contests"]
       interval: 5s
@@ -20,7 +20,7 @@ services:
 
   minio:
     image: minio/minio:latest
-    container_name: contests_minio
+    container_name: contests_dev_minio
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
@@ -29,7 +29,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - minio_data:/data
+      - minio_dev_data:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
       interval: 5s
@@ -94,11 +94,11 @@ services:
 
   redis:
     image: redis:alpine
-    container_name: contests_redis
+    container_name: contests_dev_redis
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
+      - redis_dev_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -106,6 +106,6 @@ services:
       retries: 5
 
 volumes:
-  db_data:
-  minio_data:
-  redis_data:
+  db_dev_data:
+  minio_dev_data:
+  redis_dev_data:

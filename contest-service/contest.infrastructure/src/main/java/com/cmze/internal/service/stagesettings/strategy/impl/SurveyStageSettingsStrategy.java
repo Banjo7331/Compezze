@@ -14,6 +14,7 @@ import com.cmze.spi.survey.dto.CreateSurveyRoomRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -104,7 +105,8 @@ public class SurveyStageSettingsStrategy implements StageSettingsStrategy {
                     stage.getDurationMinutes(),
                     response.getRoomId().toString()
             );
-
+        } catch (ResponseStatusException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to start remote Survey room", e);
         }
