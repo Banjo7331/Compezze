@@ -14,6 +14,7 @@ import com.cmze.repository.RoleRepository;
 import com.cmze.repository.UserRepository;
 import com.cmze.security.CustomUserDetails;
 import com.cmze.security.JwtTokenProvider;
+import com.cmze.util.TokenBlackListUtil;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.Set;
 
 @Service
@@ -35,17 +37,20 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlackListUtil tokenBlackListUtil;
 
     public AuthService(AuthenticationManager authenticationManager,
                        UserRepository userRepository,
                        RoleRepository roleRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtTokenProvider jwtTokenProvider) {
+                       JwtTokenProvider jwtTokenProvider,
+                       TokenBlackListUtil tokenBlackListUtil) {
         this.authenticationManager = authenticationManager;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.tokenBlackListUtil = tokenBlackListUtil;
     }
 
     @Transactional
@@ -73,13 +78,24 @@ public class AuthService {
     }
 
     @Transactional
-    public void logout(Authentication authentication) {
-        User user = userRepository.findByUsernameOrEmail(authentication.getName(), authentication.getName())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found for logout"));
+    public void logout(String accessToken, Authentication authentication) {
+        if (authentication != null) {
+            String username = authentication.getName();
+            userRepository.findByUsernameOrEmail(username, username)
+                    .ifPresent(user -> {
+                        user.setRefreshToken(null);
+                        user.setRefreshTokenExpiry(null);
+                        userRepository.save(user);
+                    });
+        }
 
-        user.setRefreshToken(null);
-        user.setRefreshTokenExpiry(null);
-        userRepository.save(user);
+        Date expirationDate = jwtTokenProvider.getExpirationDateFromToken(accessToken);
+        long now = System.currentTimeMillis();
+        long timeToLive = expirationDate.getTime() - now;
+
+        if (timeToLive > 0) {
+            tokenBlackListUtil.blacklistToken(accessToken, timeToLive);
+        }
     }
 
     @Transactional

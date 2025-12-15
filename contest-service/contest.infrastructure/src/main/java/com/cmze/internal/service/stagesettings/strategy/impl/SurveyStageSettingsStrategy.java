@@ -138,23 +138,7 @@ public class SurveyStageSettingsStrategy implements StageSettingsStrategy {
         try {
             surveyClient.closeRoom(roomId);
 
-            final var roomDetails = surveyClient.getRoomDetails(roomId);
-
-            final Map<UUID, Double> results = new HashMap<>();
-
-            double weight = 1.0;
-
-            if (roomDetails != null
-                    && roomDetails.getCurrentResults() != null
-                    && roomDetails.getCurrentResults().getLeaderboard() != null) {
-
-                for (final var entry : roomDetails.getCurrentResults().getLeaderboard()) {
-                    double finalScore = entry.getScore() * weight;
-                    results.put(entry.getUserId(), finalScore);
-                }
-            }
-
-            return results;
+            return Collections.emptyMap();
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to finish remote survey room", e);
