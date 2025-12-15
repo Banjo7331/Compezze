@@ -1,6 +1,8 @@
 package com.cmze.usecase.session;
 
 import com.cmze.entity.Participant;
+import com.cmze.enums.ContestStatus;
+import com.cmze.repository.ContestRepository;
 import com.cmze.repository.ParticipantRepository;
 import com.cmze.repository.RoomRepository;
 import com.cmze.response.GetContestRoomDetailsResponse;
@@ -25,13 +27,16 @@ public class GetContestRoomDetailsUseCase {
 
     private static final Logger logger = LoggerFactory.getLogger(GetContestRoomDetailsUseCase.class);
 
+    private final ContestRepository contestRepository;
     private final RoomRepository roomRepository;
     private final ParticipantRepository participantRepository;
     private final StageSettingsContext stageContext;
 
-    public GetContestRoomDetailsUseCase(final RoomRepository roomRepository,
+    public GetContestRoomDetailsUseCase(final ContestRepository contestRepository,
+                                        final RoomRepository roomRepository,
                                         final ParticipantRepository participantRepository,
                                         final StageSettingsContext stageContext) {
+        this.contestRepository = contestRepository;
         this.roomRepository = roomRepository;
         this.participantRepository = participantRepository;
         this.stageContext = stageContext;
@@ -40,6 +45,30 @@ public class GetContestRoomDetailsUseCase {
     @Transactional(readOnly = true)
     public ActionResult<GetContestRoomDetailsResponse> execute(final Long contestId, final UUID userId) {
         try {
+            final var contestOpt = contestRepository.findById(contestId);
+            if (contestOpt.isEmpty()){
+                return ActionResult.failure(ProblemDetail.forStatusAndDetail(
+                        HttpStatus.NOT_FOUND, "Contest not found"
+                ));
+            }
+
+            final var contest = contestOpt.get();
+
+            if (contest.getStatus() == ContestStatus.FINISHED) {
+
+                final var leaderBoard = calculateLeaderboard(contestId);
+
+                final var response = new GetContestRoomDetailsResponse(
+                        "FINISHED",
+                        false,
+                        null,
+                        null,
+                        leaderBoard,
+                        null
+                );
+                return ActionResult.success(response);
+            }
+
             final var roomOpt = roomRepository.findByContest_Id(contestId);
             if (roomOpt.isEmpty()) {
                 return ActionResult.failure(ProblemDetail.forStatusAndDetail(

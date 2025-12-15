@@ -68,7 +68,7 @@ public class AuthService {
         String refreshToken = jwtTokenProvider.generateRefreshToken(authentication);
 
         User user = userRepository.findByUsernameOrEmail(authentication.getName(), authentication.getName())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found after successful authentication"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         user.setRefreshToken(refreshToken);
         user.setRefreshTokenExpiry(Instant.now().plusMillis(jwtTokenProvider.getJwtRefreshExpirationDate()));
@@ -89,12 +89,16 @@ public class AuthService {
                     });
         }
 
-        Date expirationDate = jwtTokenProvider.getExpirationDateFromToken(accessToken);
-        long now = System.currentTimeMillis();
-        long timeToLive = expirationDate.getTime() - now;
+        try {
+            Date expirationDate = jwtTokenProvider.getExpirationDateFromToken(accessToken);
+            long now = System.currentTimeMillis();
+            long timeToLive = expirationDate.getTime() - now;
 
-        if (timeToLive > 0) {
-            tokenBlackListUtil.blacklistToken(accessToken, timeToLive);
+            if (timeToLive > 0) {
+                tokenBlackListUtil.blacklistToken(accessToken, timeToLive);
+            }
+        } catch (Exception e) {
+            System.err.println("Error processing logout token blacklist: " + e.getMessage());
         }
     }
 
@@ -113,7 +117,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
         Role userRole = roleRepository.findByName(RoleType.ROLE_USER)
-                .orElseThrow(() -> new ResourceNotFoundException("Error: Default 'ROLE_USER' not found in database."));
+                .orElseThrow(() -> new RuntimeException("Server Error: Default role not configured."));
 
         user.setRoles(Set.of(userRole));
 
@@ -131,7 +135,7 @@ public class AuthService {
         }
 
         User user = userRepository.findByRefreshToken(requestRefreshToken)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found for this token"));
+                .orElseThrow(() -> new InvalidRequestException("Invalid Refresh Token (User not found)"));
 
         if (user.getRefreshTokenExpiry().isBefore(Instant.now())) {
             user.setRefreshToken(null);
@@ -157,13 +161,14 @@ public class AuthService {
     public void changePassword(ChangePasswordRequest request, Authentication authentication) {
         String username = authentication.getName();
         User user = userRepository.findByUsernameOrEmail(username, username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             throw new InvalidRequestException("Incorrect old password.");
         }
 
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+
         user.setRefreshToken(null);
         user.setRefreshTokenExpiry(null);
 
